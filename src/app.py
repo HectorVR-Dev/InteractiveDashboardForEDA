@@ -1,28 +1,36 @@
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+from pages import home, eda, filters, conclusions, resources, feedback
+from PIL import Image
 
-data_path = "data/Estudiantes_clear.csv"
-df = pd.read_csv(data_path)
+# Eliminamos el título predeterminado del Streamlit
+icon = Image.open('src/images/grafico-de-dispersion.png')
+st.set_page_config(page_title="Interactive Dashboard", page_icon=icon,
+                   initial_sidebar_state="auto", layout="wide")
 
-# Título de la aplicación
-st.title("Dashboard Interactivo")
-st.subheader("By: Hector Vasquez & Wilhelm Buitrago")
+# Renderizamos el menú lateral por defecto y sin el título de la aplicación
+st.sidebar.title("Navegación")
 
-# Mostrar una vista previa de los datos
-st.subheader("Vista previa de los datos")
-st.write(df.tail())
-st.write(df.describe())
+# Definimos las opciones de navegación en el menú lateral
+page = st.sidebar.radio(
+    "",
+    ["Inicio", "Análisis Exploratorio de Datos", "Filtros Interactivos",
+        "Conclusiones y Recomendaciones", "Recursos Adicionales", "Feedback y Contacto"]
+)
 
-# Análisis exploratorio de datos
-st.subheader("Análisis Exploratorio de Datos (EDA)")
-# graficos pichurrios
+# Renderizamos la vista correspondiente según la selección del usuario
+if page == "Inicio":
+    home.show_home()
+elif page == "Análisis Exploratorio de Datos":
+    eda.show_eda()
 
-# Creacion de histogramas apartor de variables
-st.subheader("Histograma de una variable")
-selected_column = st.selectbox("Seleccionar una columna:", df.columns)
-plt.hist(df[selected_column])
-st.pyplot()
+elif page == "Filtros Interactivos":
+    filters.show_filters()
 
-# para el wilhelm se corre ejecuntado streamlit run src/app.py
+elif page == "Conclusiones y Recomendaciones":
+    conclusions.show_conclusions()
+
+elif page == "Recursos Adicionales":
+    resources.show_resources()
+
+elif page == "Feedback y Contacto":
+    feedback.show_feedback()
