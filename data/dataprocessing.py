@@ -23,6 +23,14 @@ def CompatData(column1, column2, data):
     return data
 
 
+def convfloat(column, df):
+    k = [float(d.replace(',', '.')) if isinstance(
+        d, str) else d for d in df[column]]
+    k = ["" if pd.isna(d) else d for d in k]
+    df[column] = k
+    return df
+
+
 df = CompatData("COD_PLAN", "PLAN", df)
 df = CompatData("COD_ACCESO", "ACCESO", df)
 df = CompatData("COD_SUBACCESO", "SUBACCESO", df)
@@ -43,5 +51,9 @@ df["DISCAPACIDAD"].replace({'SI': 1, 'NO': 0}, inplace=True)
 df["CARACTER_COLEGIO"].replace(
     {'Plantel Oficial': 1, 'Plantel Privado': 0}, inplace=True)
 
+# Tranformar cadenas de texto a numeros flotantes
+df = convfloat("PAPA", df)
+df = convfloat("AVANCE_CARRERA", df)
+df = convfloat("PROME_ACADE", df)
 # Guardar dataset limpio
 df.to_csv('data/Estudiantes_clearX.csv', index=False)
