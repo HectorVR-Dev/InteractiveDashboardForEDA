@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import math
 
 # Cargar dataset
 df = pd.read_csv("data/Estudiantes_dirty.csv")
@@ -43,9 +42,6 @@ df = CompatData("COD_NACIONALIDAD", "PAIS-NACIONALIDAD", df)
 # Transformacion de datos para mejorar manipulacion
 # victimas de comflicto armado
 df["VICTIMAS_DEL_CONFLICTO"].replace({'SI': 1, 'NO': 0}, inplace=True)
-
-# Discapacidad
-df["DISCAPACIDAD"].replace({'SI': 1, 'NO': 0}, inplace=True)
 
 # Caracter del colegio publico = 1 , Privado = 0
 df["CARACTER_COLEGIO"].replace(
