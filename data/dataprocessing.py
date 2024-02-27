@@ -23,7 +23,7 @@ def CompatData(column1, column2, data):
 
 
 def convfloat(column, df):
-    k = [float(d.replace(',', '.')) if isinstance(
+    k = [np.float64(d.replace(',', '.')) if isinstance(
         d, str) else d for d in df[column]]
     k = ["" if pd.isna(d) else d for d in k]
     df[column] = k
@@ -42,10 +42,6 @@ df = CompatData("COD_NACIONALIDAD", "PAIS-NACIONALIDAD", df)
 # Transformacion de datos para mejorar manipulacion
 # victimas de comflicto armado
 df["VICTIMAS_DEL_CONFLICTO"].replace({'SI': 1, 'NO': 0}, inplace=True)
-
-# Caracter del colegio publico = 1 , Privado = 0
-df["CARACTER_COLEGIO"].replace(
-    {'Plantel Oficial': 1, 'Plantel Privado': 0}, inplace=True)
 
 # Tranformar cadenas de texto a numeros flotantes
 df = convfloat("PAPA", df)
