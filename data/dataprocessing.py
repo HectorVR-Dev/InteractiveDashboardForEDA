@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import math
 
 # Cargar dataset
 df = pd.read_csv("data/Estudiantes_dirty.csv")
@@ -18,7 +17,7 @@ def CompatData(column1, column2, data):
             valor = int(valor)
         d[valor] = data.loc[df[column1] == valor, column2].values[0]
     d = pd.DataFrame(list(d.items()), columns=[column1, column2])
-    d.to_csv(f"data/{column1}-{column2}.csv", index=False)
+    d.to_csv(f"data/{column1}.csv", index=False)
     data = data.drop(column2, axis=1)
     return data
 
@@ -44,9 +43,6 @@ df = CompatData("COD_NACIONALIDAD", "PAIS-NACIONALIDAD", df)
 # victimas de comflicto armado
 df["VICTIMAS_DEL_CONFLICTO"].replace({'SI': 1, 'NO': 0}, inplace=True)
 
-# Discapacidad
-df["DISCAPACIDAD"].replace({'SI': 1, 'NO': 0}, inplace=True)
-
 # Caracter del colegio publico = 1 , Privado = 0
 df["CARACTER_COLEGIO"].replace(
     {'Plantel Oficial': 1, 'Plantel Privado': 0}, inplace=True)
@@ -56,4 +52,4 @@ df = convfloat("PAPA", df)
 df = convfloat("AVANCE_CARRERA", df)
 df = convfloat("PROME_ACADE", df)
 # Guardar dataset limpio
-df.to_csv('data/Estudiantes_clearX.csv', index=False)
+df.to_csv('data/Estudiantes_clear.csv', index=False)
