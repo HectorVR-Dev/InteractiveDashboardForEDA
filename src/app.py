@@ -82,9 +82,16 @@ class dashboard():
                 est_cat = pd.DataFrame(
                     {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
                 if variable_seleccionada[:3] == 'COD':
-                    t = pd.read_csv(f'data/{variable_seleccionada}.csv')
-                    est_cat = pd.merge(est_cat, t[[variable_seleccionada, '']])
-                st.dataframe(est_cat, use_container_width=True)
+                    t = pd.read_csv(
+                        f'data/{variable_seleccionada}.csv')
+                    est_cat = pd.merge(est_cat, t[[
+                                       variable_seleccionada, t.columns[1]]], on=variable_seleccionada, how='right')
+                    est_cat = est_cat[[est_cat.columns[-1]] +
+                                      list(est_cat.columns[:-1])]
+                    st.dataframe(est_cat, hide_index=True,
+                                 use_container_width=True)
+                else:
+                    st.dataframe(est_cat, use_container_width=True)
 
     def show_filters(self):
         st.title("Filtros Interactivos")
