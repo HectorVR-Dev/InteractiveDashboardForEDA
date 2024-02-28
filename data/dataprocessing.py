@@ -4,7 +4,6 @@ import pandas as pd
 # Cargar dataset
 df = pd.read_csv("data/Estudiantes_dirty.csv")
 
-
 # Limpieza de columnas no relevantes
 df = df.drop(["SEDE", "COD_FACULTAD", "FACULTAD", "CONVENIO_PLAN",
               "COD_NIVEL", "NIVEL"], axis=1)
@@ -91,7 +90,6 @@ df["VICTIMAS_DEL_CONFLICTO"].replace({'SI': 1, 'NO': 0}, inplace=True)
 df = convfloat("PAPA", df)
 df = convfloat("AVANCE_CARRERA", df)
 df = convfloat("PROME_ACADE", df)
-
 df = convint("COD_MUN_RESIDENCIA", df)
 df = convint("COD_PROVINCIA", df)
 df = convint("COD_DEPTO_RESIDENCIA", df)

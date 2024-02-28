@@ -1,6 +1,8 @@
 import streamlit as st
 from PIL import Image
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class dashboard():
@@ -20,12 +22,14 @@ class dashboard():
                                      "Conclusiones y Recomendaciones", "Recursos Adicionales", "Feedback y Contacto"])
 
         st.sidebar.image(img, width=200)
+
         self.pages = {'Inicio': self.show_home,
                       'EDA and Visualización': self.show_eda,
                       'Filtros Interactivos': self.show_filters,
                       'Conclusiones y Recomendaciones': self.show_conclusions,
                       'Recursos Adicionales': self.show_resources,
                       'Feedback y Contacto': self.show_feedback}
+
         self.vars = self.df.columns.to_list()
         self.vars.insert(0, "---")
 
@@ -61,8 +65,50 @@ class dashboard():
         if action == "Estadistica Descriptiva":
             self.est_desc()
 
+        if action == "Graficacion de Variables":
+            self.graficas()
+
+    def scatter_plot(self, x, y):
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+        ax.plt.scatter(self.df[x], self.df[y], alpha=0.5)
+
+        plt.figure(figsize=(8, 6))
+        plt.scatter(self.df[x], self.df[y], alpha=0.5)
+        plt.xlabel(x)
+        plt.ylabel(y)
+        plt.title(f"Gráfico de Dispersión entre {x} y {y}")
+        st.pyplot()
+
+    def bar_plot(self, x):
+        arr = self.df[x].value_counts().plot(kind='bar')
+        fig, ax = plt.subplots()
+        ax.plt.figure(figsize=(8, 6))
+        ax.plt.xlabel(x)
+        ax.plt.ylabel("Frecuencia")
+        ax.plt.title(f"Gráfico de Barras para {x}")
+        st.pyplot(fig)
+
     def graficas(self):
-        st.write("Hola, que hace")
+        typeVar = st.selectbox("Tipo de Variable:", [
+            "", "Numerica", "Categorica"])
+        if typeVar == "Numerica":
+            variable_seleccionada = st.multiselect(
+                "Selecciona las variables numericas **(Una o Mas)**.", self.var_numeric)
+            if variable_seleccionada != [] and len(variable_seleccionada) == 2:
+                self.scatter_plot(
+                    variable_seleccionada[0], variable_seleccionada[1])
+            else:
+                st.write("seleccione dos variables.")
+
+        elif typeVar == "Categorica":
+            variable_seleccionada = st.selectbox(
+                "Selecciona las variable categorica:", self.var_categoric)
+            if variable_seleccionada != '':
+                arr = self.df[variable_seleccionada]
+                fig, ax = plt.subplots()
+                ax.hist(arr, bins=20)
+                st.pyplot(fig)
 
     def est_desc(self):
         typeVar = st.selectbox("Tipo de Variable:", [
@@ -73,6 +119,7 @@ class dashboard():
             if variable_seleccionada != []:
                 estadisticas = self.df[variable_seleccionada].describe()
                 st.dataframe(estadisticas, use_container_width=True)
+
         elif typeVar == "Categorica":
             variable_seleccionada = st.selectbox(
                 "Selecciona las variable categorica:", self.var_categoric)
