@@ -45,6 +45,7 @@ class dashboard():
         var.insert(0, "---")
         var = st.selectbox("Variable:", var)
         st.markdown(self.desc_var(var))
+        st.write(self.df)
 
         # st.write(f"Para este año la Universidad Nacional de Colombia Sede de La Paz cuenta con {len(
         #    self.df)} estudiantes activos, el dataset depurado cuenta con 23 variables, 8 numericas",
@@ -162,62 +163,162 @@ class dashboard():
         elif var == "T_DOCUMENTO":
             des = """
             ### Descripción de la variable T_DOCUMENTO
+            La variable T_DOCUMENTO indica el tipo de documento de identidad del estudiante.
             
-            [Descripción detallada de la variable T_DOCUMENTO]
+            - **Tipo de datos**: Cadena de caracteres (str).
+
+            - **Valores posibles**: Los valores posibles para esta variable son "Cédula de Ciudadanía", "Cédula de Extranjero" y "Tarjeta de Identidad".
+
+            Esta variable es importante para identificar y clasificar adecuadamente los tipos de documentos de identidad presentados por los estudiantes, lo que puede ser relevante para diversos fines administrativos y de reporte.
             """
         elif var == "GENERO":
             des = """
             ### Descripción de la variable GENERO
-            
-            [Descripción detallada de la variable GENERO]
+            La variable GENERO indica el género del estudiante y puede tomar dos valores:
+
+            - **Tipo de datos**: Cadena de caracteres (str).
+
+            - **Valores posibles**: Los valores posibles para esta variable son "Hombre" y "Mujer".
+
+            Esta variable es importante para comprender la distribución de género entre los estudiantes matriculados, lo que puede ser relevante para diversos análisis y políticas institucionales relacionadas con la equidad de género y la diversidad.
             """
         elif var == "EDAD":
             des = """
             ### Descripción de la variable EDAD
-            
-            [Descripción detallada de la variable EDAD]
+            La variable EDAD representa la edad del estudiante al momento generar la base de datos (2024-1).
+
+            - **Tipo de datos**: Entero (int).
+
+            - **Valores posibles**: La variable EDAD toma valores enteros que representan la edad del estudiante en años.
+
+            La edad del estudiante puede ser un factor crucial en varios aspectos:
+
+            **Análisis demográfico**: La distribución de edades entre los estudiantes puede proporcionar información valiosa sobre la composición de la población estudiantil, como la proporción de estudiantes jóvenes y adultos.
+
+            **Identificación de necesidades**: Las necesidades y características de los estudiantes pueden variar según su edad. Por ejemplo, los estudiantes más jóvenes pueden requerir más apoyo académico y social para adaptarse a la vida universitaria, mientras que los estudiantes mayores pueden tener responsabilidades adicionales, como el trabajo o la familia.
+
+            **Planificación académica**: La edad de los estudiantes puede influir en su progreso académico, tiempo de graduación y participación en programas especiales.
+
+            **Evaluación institucional**: La edad de los estudiantes puede ser un indicador importante para evaluar la efectividad de los programas de reclutamiento y retención, así como para identificar posibles desafíos y oportunidades dentro de la institución.
+
+            **Estudios longitudinales**: Seguir la evolución de los estudiantes a lo largo del tiempo puede proporcionar información sobre el impacto de la educación superior en diferentes grupos de edad, así como insights sobre el desarrollo personal y profesional de los estudiantes.
             """
         elif var == "NUMERO_MATRICULAS":
             des = """
             ### Descripción de la variable NUMERO_MATRICULAS
-            
-            [Descripción detallada de la variable NUMERO_MATRICULAS]
+            La variable NUMERO_MATRICULAS indica el número de semestres que ha cursado el estudiante en la universidad hasta el momento (2024-1).
+
+            - **Tipo de datos**: Entero (int).
+
+            - **Valores posibles**: La variable NUMERO_MATRICULAS toma valores enteros no negativos que representan el número de semestres que el estudiante ha cursado hasta el momento.
+
+            El número de semestres cursados por el estudiante puede proporcionar información valiosa sobre su progreso académico y su trayectoria en la universidad:
+
+            Rendimiento académico: El número de semestres cursados puede ser un indicador del avance académico del estudiante y de su compromiso con el programa de estudios.
+
+            Planificación educativa: Conocer el número de semestres cursados por el estudiante puede ayudar en la planificación de su itinerario académico y en la identificación de posibles necesidades de apoyo o intervención.
+
+            Evaluación institucional: El seguimiento del número de semestres cursados por los estudiantes puede proporcionar información útil para la evaluación y mejora de programas académicos, políticas de retención estudiantil y prácticas institucionales.
             """
         elif var == "PAPA":
             des = """
             ### Descripción de la variable PAPA
+            La variable PAPA representa el Promedio Académico Ponderado Acumulado del estudiante en la universidad. A diferencia del promedio tradicional, el PAPA tiene en cuenta las notas obtenidas en asignaturas perdidas incluso después de haber sido aprobadas, incorporando ambas calificaciones en el cálculo del promedio.
+
+            - **Tipo de datos**: Decimal (float).
+
+            - **Rango de valores**: La variable PAPA puede tomar valores en el rango de 0.0 a 5.0
             
-            [Descripción detallada de la variable PAPA]
+            El hecho de que el PAPA tenga en cuenta las notas de asignaturas perdidas, incluso después de haber sido aprobadas, lo hace especialmente significativo como una medida más completa y precisa del rendimiento académico de un estudiante a lo largo de su carrera universitaria.
             """
         elif var == "PROME_ACADE":
             des = """
             ### Descripción de la variable PROME_ACADE
-            
-            [Descripción detallada de la variable PROME_ACADE]
+            La variable PROME_ACADE representa el Promedio Académico de los estudiantes en la universidad. A diferencia del Promedio Académico Ponderado Acumulado (PAPA), que tiene en cuenta tanto las notas de las asignaturas aprobadas como las de las asignaturas perdidas incluso después de ser aprobadas, el PROME_ACADE solo considera la última nota obtenida en una asignatura. Es decir, si un estudiante reprueba una asignatura pero la aprueba en un semestre posterior, solo se tomará en cuenta la nota cuando fue aprobada.
+
+            - **Tipo de datos**: Decimal (float).
+            - **Rango de valores**: La variable PROME_ACADE puede tomar valores en el rango de 0.0 a 5.0
+
+            El PROME_ACADE proporciona una medida del rendimiento académico de los estudiantes en la universidad, centrándose únicamente en las notas de las asignaturas aprobadas en su última instancia. A diferencia del PAPA, no considera las notas de asignaturas perdidas después de ser aprobadas, lo que puede ofrecer una perspectiva diferente del desempeño académico de los estudiantes.
             """
         elif var == "PBM_CALCULADO":
             des = """
             ### Descripción de la variable PBM_CALCULADO
+            La variable PBM_CALCULADO representa el Puntaje Básico de Matrícula calculado para cada estudiante en la universidad. Este puntaje se determina a partir de la situación socioeconómica de cada estudiante, donde puntajes más bajos indican una mayor vulnerabilidad económica.
+
+            - **Tipo de datos**: Entero (int).
+            - **Rango de valores**: La variable PBM_CALCULADO puede tomar valores en el rango de 0 a 100.
             
-            [Descripción detallada de la variable PBM_CALCULADO]
+            El Puntaje Básico de Matrícula (PBM) es una medida utilizada para reflejar la situación socioeconómica de los estudiantes y se calcula considerando diversos factores relacionados con sus ingresos, recursos financieros y condiciones socioeconómicas generales. Los estudiantes con mayores dificultades económicas generalmente reciben un PBM más bajo, lo que puede reflejar su necesidad de asistencia financiera adicional para acceder a la educación superior.
+
+            Además, cabe destacar que el valor del semestre se asigna a partir del PBM_CALCULADO. Los estudiantes con PBM entre 0 y 10 no pagan matrícula.
+
+            El PBM_CALCULADO es una herramienta importante para evaluar y abordar la equidad en el acceso a la educación superior, al proporcionar una medida objetiva de la situación socioeconómica de los estudiantes y permitir la implementación de políticas y programas de apoyo dirigidos a aquellos con mayores necesidades
             """
         elif var == "ESTRATO":
             des = """
             ### Descripción de la variable ESTRATO
-            
-            [Descripción detallada de la variable ESTRATO]
+            La variable ESTRATO representa el estrato socioeconómico en el que vive cada uno de los estudiantes. Este estrato es una medida utilizada comúnmente en varios países para clasificar los niveles socioeconómicos de los hogares, donde valores más altos indican un mayor nivel socioeconómico.
+
+            - **Tipo de datos**: Entero (int).
+
+            - **Rango de valores**: La variable ESTRATO puede tomar valores en el rango de 0 a 6.
+
+            El estrato socioeconómico es una medida importante que puede influir en diversos aspectos de la vida de los estudiantes, incluido su acceso a recursos y servicios, su calidad de vida y su capacidad para acceder a la educación superior. Los estudiantes con un estrato socioeconómico más alto pueden tener mayores oportunidades económicas y acceso a mejores servicios, mientras que aquellos con un estrato más bajo pueden enfrentar mayores desafíos socioeconómicos y necesidades adicionales de apoyo.
+
+            El registro del estrato socioeconómico de los estudiantes puede ser útil para comprender mejor su contexto socioeconómico y diseñar programas y políticas que aborden las necesidades específicas de diferentes grupos de estudiantes.
             """
         elif var == "COD_DEPTO_RESIDENCIA":
             des = """
             ### Descripción de la variable COD_DEPTO_RESIDENCIA
+            La variable COD_DEPTO_RESIDENCIA es un código entero que está relacionado con el departamento de residencia de cada estudiante. Este código identifica el departamento geográfico en el que reside el estudiante.
+
+            - **Tipo de datos**: Entero (int).
+            - **Rango de valores**: La variable COD_DEPTO_RESIDENCIA puede tomar valores específicos que corresponden a códigos numéricos asignados a cada departamento.
             
-            [Descripción detallada de la variable COD_DEPTO_RESIDENCIA]
+            Los códigos de departamento presentes en la base de datos, junto con sus correspondientes departamentos, se enumeran a continuación:
+
+            - Código 20: CESAR
+            - Código 44: LA GUAJIRA
+            - Código 54: NORTE DE SANTANDER
+            - Código 47: MAGDALENA
+            
+            Estos códigos son utilizados para identificar de manera única el departamento de residencia de cada estudiante en la base de datos.
             """
         elif var == "COD_MUN_RESIDENCIA":
             des = """
             ### Descripción de la variable COD_MUN_RESIDENCIA
+            La variable COD_MUN_RESIDENCIA es un código entero que está relacionado con el municipio de residencia de cada estudiante. Este código identifica el municipio geográfico en el que reside el estudiante.
+
+            - **Tipo de datos**: Entero (int).
+            - **Rango de valores**: La variable COD_MUN_RESIDENCIA puede tomar valores específicos que corresponden a códigos numéricos asignados a cada municipio.
             
-            [Descripción detallada de la variable COD_MUN_RESIDENCIA]
+            Los códigos de municipio presentes en la base de datos, junto con sus correspondientes municipios, se enumeran a continuación:
+
+            - Código 32: ASTREA
+            - Código 1: VALLEDUPAR
+            - Código 60: BOSCONIA
+            - Código 621: LA PAZ
+            - Código 570: PUEBLO BELLO
+            - Código 13: AGUSTÍN CODAZZI
+            - Código 874: VILLANUEVA
+            - Código 443: MANAURE BALCÓN DEL CESAR
+            - Código 750: SAN DIEGO
+            - Código 228: CURUMANÍ
+            - Código 650: SAN JUAN DEL CESAR
+            - Código 45: BECERRIL
+            - Código 855: URUMITA
+            - Código 250: EL PASO
+            - Código 770: SAN MARTÍN
+            - Código 400: LA JAGUA DE IBIRICO
+            - Código 175: CHIMICHAGUA
+            - Código 517: PAILITAS
+            - Código 420: LA JAGUA DEL PILAR
+            - Código 430: MAICAO
+            - Código 498: OCAÑA
+            - Código 170: CHIBOLO
+
+            Estos códigos son utilizados para identificar de manera única el municipio de residencia de cada estudiante en la base de datos.
             """
         elif var == "COD_PROVINCIA":
             des = """
