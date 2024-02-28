@@ -10,14 +10,18 @@ class dashboard():
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
                            page_icon=icon, layout="wide")
+        self.var_numeric = ['AVANCE_CARRERA', 'EDAD', 'NUMERO_MATRICULAS',
+                            'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'ESTRATO', 'PUNTAJE_ADMISION']
+        self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'COD_DEPTO_RESIDENCIA', 'COD_MUN_RESIDENCIA', 'COD_PROVINCIA',
+                              'COD_MINICIPIO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
 
         st.sidebar.title("Navegación")
-        self.page = st.sidebar.radio("", ["Inicio", "Visualizacion EDA", "Filtros Interactivos",
+        self.page = st.sidebar.radio("", ["Inicio", "EDA and Visualización", "Filtros Interactivos",
                                      "Conclusiones y Recomendaciones", "Recursos Adicionales", "Feedback y Contacto"])
 
         st.sidebar.image(img, width=200)
         self.pages = {'Inicio': self.show_home,
-                      'Visualizacion EDA': self.show_eda,
+                      'EDA and Visualización': self.show_eda,
                       'Filtros Interactivos': self.show_filters,
                       'Conclusiones y Recomendaciones': self.show_conclusions,
                       'Recursos Adicionales': self.show_resources,
@@ -40,21 +44,47 @@ class dashboard():
 
          A continuacion puede escoger cualquier variable para ver su respectiva descripcion:
         """)
-        # st.write()
         var = self.df.columns.to_list()
         var.insert(0, "---")
         var = st.selectbox("Variable:", var)
         st.markdown(self.desc_var(var))
-        st.write(self.df)
-
-        # st.write(f"Para este año la Universidad Nacional de Colombia Sede de La Paz cuenta con {len(
-        #    self.df)} estudiantes activos, el dataset depurado cuenta con 23 variables, 8 numericas",
-        #    " y 15 categoricas. ")
 
     def show_eda(self):
-        st.title("Análisis Exploratorio de Datos")
-        st.write(
-            "En esta sección, puedes explorar y analizar los datos de manera interactiva.")
+        st.markdown("""
+            # **Análisis Exploratorio de Datos**
+                 
+            En esta sección, puedes explorar y analizar los datos de manera interactiva.
+            """)
+        action = st.selectbox("## **Que deseas hacer:**", ["", "Estadistica Descriptiva",
+                                                           "Graficacion de Variables"])
+        if action == "Estadistica Descriptiva":
+            self.est_desc()
+
+    def graficas(self):
+        st.write("Hola, que hace")
+
+    def est_desc(self):
+        typeVar = st.selectbox("Tipo de Variable:", [
+            "", "Numerica", "Categorica"])
+        if typeVar == "Numerica":
+            variable_seleccionada = st.multiselect(
+                "Selecciona las variables numericas **(Una o Mas)**.", self.var_numeric)
+            if variable_seleccionada != []:
+                estadisticas = self.df[variable_seleccionada].describe()
+                st.dataframe(estadisticas, use_container_width=True)
+        elif typeVar == "Categorica":
+            variable_seleccionada = st.selectbox(
+                "Selecciona las variable categorica:", self.var_categoric)
+            if variable_seleccionada != '':
+                frecuencia = self.df[variable_seleccionada].value_counts()
+                porcentaje = self.df[variable_seleccionada].value_counts(
+                    normalize=True)*100
+                est_cat = pd.DataFrame(
+                    {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
+                if variable_seleccionada[:3] == 'COD':
+                    t = pd.read_csv(f'data/{variable_seleccionada}.csv')
+                    est_cat = pd.merge(est_cat, t[[variable_seleccionada, '']])
+                st.dataframe(est_cat, use_container_width=True)
 
     def show_filters(self):
         st.title("Filtros Interactivos")
@@ -341,26 +371,55 @@ class dashboard():
         elif var == "VICTIMAS_DEL_CONFLICTO":
             des = """
             ### Descripción de la variable VICTIMAS_DEL_CONFLICTO
+            La variable VICTIMAS_DEL_CONFLICTO es una variable booleana que indica si un estudiante es víctima del conflicto armado en Colombia.
+
+            - **Tipo de datos**: Entero (int) o Booleano (bool).
+            - **Valores posibles**:
+                - **1:** Indica que el estudiante es víctima del conflicto armado.
+                - **0:** Indica que el estudiante no es víctima del conflicto armado.
             
-            [Descripción detallada de la variable VICTIMAS_DEL_CONFLICTO]
+            Esta variable proporciona información importante sobre la condición de victimización de los estudiantes en relación con el conflicto armado en Colombia. La consideración de esta variable puede ser relevante para comprender el impacto del conflicto en la población estudiantil y para diseñar políticas y programas de apoyo dirigidos a aquellos que han sido afectados por esta situación.
             """
         elif var == "DISCAPACIDAD":
             des = """
             ### Descripción de la variable DISCAPACIDAD
+            La variable DISCAPACIDAD es una variable de tipo string que indica el tipo de discapacidad que puede tener un estudiante.
+
+            - **Tipo de datos:** Cadena de caracteres (str).
+
+            - **Valores posibles:**
+                - **'AUDITIVA':** Indica que el estudiante tiene una discapacidad auditiva.
+                - **'FISICA':** Indica que el estudiante tiene una discapacidad física.
+                - **'MÚLTIPLE':** Indica que el estudiante tiene una discapacidad múltiple.
+                - **'VISUAL':** Indica que el estudiante tiene una discapacidad visual.
+                - **'NO':** Indica que el estudiante no tiene ninguna discapacidad.
             
-            [Descripción detallada de la variable DISCAPACIDAD]
+            Esta variable proporciona información importante sobre el tipo de discapacidad que puede tener un estudiante, o indica que el estudiante no tiene ninguna discapacidad. La consideración de esta variable puede ser relevante para comprender las necesidades específicas de los estudiantes con discapacidades y para diseñar políticas y programas de apoyo que promuevan la inclusión y la accesibilidad en el ámbito educativo.
             """
         elif var == "CARACTER_COLEGIO":
             des = """
             ### Descripción de la variable CARACTER_COLEGIO
+            La variable CARACTER_COLEGIO es una variable de tipo string que indica el carácter del colegio del cual se graduó el estudiante.
+
+            - **Tipo de datos:** Cadena de caracteres (str).
+            - **Valores posibles:**
+                - **'Plantel Oficial':** Indica que el estudiante se graduó de un colegio público.
+                - **'Plantel Privado':** Indica que el estudiante se graduó de un colegio privado.
+                - **'Nocturno':** Indica que el estudiante se graduó de un colegio con jornada nocturna.
             
-            [Descripción detallada de la variable CARACTER_COLEGIO]
+            Esta variable proporciona información importante sobre el carácter del colegio del cual se graduó el estudiante. La consideración de esta variable puede ser relevante para comprender el contexto educativo de los estudiantes y para analizar posibles disparidades en los recursos y oportunidades educativas disponibles en diferentes tipos de colegios.
             """
         elif var == "PUNTAJE_ADMISION":
             des = """
             ### Descripción de la variable PUNTAJE_ADMISION
+            La variable PUNTAJE_ADMISION es una variable de tipo float que representa el puntaje obtenido por un estudiante en el examen de admisión para ingresar a la universidad.
+
+            - **Tipo de datos:** Número de punto flotante (float).
+            - **Rango de valores:** La variable PUNTAJE_ADMISION puede tomar valores en el rango de 0 a 1000, con hasta 3 decimales de precisión.
             
-            [Descripción detallada de la variable PUNTAJE_ADMISION]
+            Este puntaje se utiliza como criterio de selección para admitir a los estudiantes en la universidad. Los estudiantes con puntajes más altos tienen más probabilidades de ser seleccionados cuando hay disponibilidad limitada de cupos.
+
+            La consideración del puntaje de admisión es crucial para el proceso de selección de estudiantes y puede influir en la composición demográfica y académica de la población estudiantil en la universidad. Además, puede ser utilizado como indicador de desempeño académico y potencial de éxito académico de los estudiantes en la institución.
             """
         return des
 

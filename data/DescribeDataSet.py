@@ -23,8 +23,8 @@ for x in df.loc[46, :]:
     else:
         numerical.append(x)
 
-print(len(categorical))
-print(len(numerical))
+print(categorical, len(categorical))
+print(numerical, len(numerical))
 
 # variables_categoricas = df.select_dtypes(include=['object', 'category'])
 # variables_booleanas = df.select_dtypes(include=['bool'])
