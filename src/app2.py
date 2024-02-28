@@ -88,27 +88,65 @@ class dashboard():
                 st.dataframe(est_cat, use_container_width=True)
 
     def show_filters(self):
+        general = False
         self.modr = self.df
         self.cars = pd.read_csv("data/COD_PLAN.csv")
         st.title("Filtros Interactivos")
         st.write(
             "Utiliza los filtros interactivos para personalizar tu análisis de datos.")
         BT = st.multiselect("Filtros", self.vars)
-        if not BT:
-            st.dataframe(self.modr, use_container_width=True, hide_index=True)
+
         if "COD_PLAN" in BT:
             carr = st.multiselect("Carrera", ["BIOLOGÍA", "ESTADÍSTICA", "GEOGRAFÍA",
                                   "GESTIÓN CULTURAL Y COMUNICATIVA", "INGENIERÍA BIOLÓGICA", "INGENIERÍA MECATRÓNICA"])
-
-            if not carr:
-                st.dataframe(self.modr)
-            else:
-                carr = self.cars[self.cars["PLAN"].isin(
-                    carr)]["COD_PLAN"].tolist()
-                self.modr[self.modr["COD_PLAN"].isin(carr)]
+            carr = self.cars[self.cars["PLAN"].isin(
+                carr)]["COD_PLAN"].tolist()
+            self.modr = self.modr[self.modr["COD_PLAN"].isin(carr)]
         if "AVANCE_CARRERA" in BT:
-            st.dataframe(self.modr[BT], column_config={"AVANCE_CARRERA":  st.column_config.ProgressColumn(
-                "AVANCE_CARRERA", help="Avance de carrera actual del estudiante", min_value=0.0, max_value=100.0)}, disabled=BT, hide_index=True, use_container_width=True)
+            range1 = st.slider("AVANCE_CARRERA", min_value=0.0,
+                               max_value=100.0, format="%d", value=(0.0, 100.0))
+            self.modr = self.modr[(self.modr["AVANCE_CARRERA"] <=
+                                  range1[1]) & (self.modr["AVANCE_CARRERA"] >= range1[0])]
+
+        if "COD_ACCESO" in BT:
+            self.cas = pd.read_csv("data/COD_ACCESO.csv")
+            ca = st.multiselect(
+                "Tipo de Acceso", ["EXAMEN DE ADMISIÓN A LA UNIVERSIDAD", "TRASLADO"])
+
+            ca = self.cas[self.cas["ACCESO"].isin(
+                ca)]["COD_ACCESO"].tolist()
+            self.modr = self.modr[self.modr["COD_ACCESO"].isin(ca)]
+        if "COD_SUBACCESO" in BT:
+            self.csa = pd.read_csv("data/COD_SUBACCESO.csv")
+            csa = st.multiselect("Tipo de Sub-Acceso", ["PROGRAMA DE ADMISIÓN ESPECIAL PARA LOS PROGRAMAS DE PREGRADO SEDE LA PAZ", "REGULAR DE PREGRADO",
+                                 "VÍCTIMAS DEL CONFLICTO ARMADO EN COLOMBIA", "PAES - POBLACION NEGRA, AFROCOLOMBIANA, PALENQUERA Y RAIZAL", "PAES - INDÍGENA"])
+
+            csa = self.csa[self.csa["SUBACCESO"].isin(
+                csa)]["COD_SUBACCESO"].tolist()
+            self.modr = self.modr[self.modr["COD_SUBACCESO"].isin(csa)]
+
+        if "GENERO" in BT:
+            self.genre = pd.read_csv("data/COD_SUBACCESO.csv")
+            gen = st.multiselect("Genero", ["HOMBRE", "MUJER"])
+
+            self.modr = self.modr[self.modr["GENERO"].isin(gen)]
+        if "EDAD" in BT:
+            range2 = st.slider("EDAD", min_value=16,
+                               max_value=42, format="%d", value=(16, 42))
+            self.modr = self.modr[(self.modr["EDAD"] <= range2[1]) & (
+                self.modr["EDAD"] >= range2[0])]
+        if "PAPA" in BT:
+            range3 = st.slider("PAPA", min_value=0.0,
+                               max_value=5.0, format="%f", value=(0.0, 5.0))
+            self.modr = self.modr[(self.modr["PAPA"] <= range3[1]) & (
+                self.modr["PAPA"] >= range3[0])]
+        if "PROME_ACADE" in BT:
+            range4 = st.slider("PROME_ACADE", min_value=0.0,
+                               max_value=5.0, format="%f", value=(0.0, 5.0))
+            self.modr = self.modr[(self.modr["PAPA"] <= range4[1]) & (
+                self.modr["PAPA"] >= range4[0])]
+        st.dataframe(
+            self.modr, column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA", help="El avance del estudiante en su carrera actual", min_value=0.0, max_value=100.0, format="%f")}, use_container_width=True, hide_index=True)
 
     def show_conclusions(self):
         st.title("Conclusiones y Recomendaciones")
