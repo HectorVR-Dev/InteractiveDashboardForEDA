@@ -16,6 +16,7 @@ class dashboard():
                             'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'ESTRATO', 'PUNTAJE_ADMISION']
         self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'COD_DEPTO_RESIDENCIA', 'COD_MUN_RESIDENCIA', 'COD_PROVINCIA',
                               'COD_MINICIPIO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
+        self.var_graficos = ['Dispersion']
 
         st.sidebar.title("Navegación")
         self.page = st.sidebar.radio("", ["Inicio", "EDA and Visualización", "Filtros Interactivos",
@@ -71,22 +72,15 @@ class dashboard():
     def scatter_plot(self, x, y):
         fig, ax = plt.subplots()
         ax.scatter(x, y)
-        ax.plt.scatter(self.df[x], self.df[y], alpha=0.5)
-
-        plt.figure(figsize=(8, 6))
-        plt.scatter(self.df[x], self.df[y], alpha=0.5)
-        plt.xlabel(x)
-        plt.ylabel(y)
-        plt.title(f"Gráfico de Dispersión entre {x} y {y}")
-        st.pyplot()
+        st.pyplot(fig)
 
     def bar_plot(self, x):
         arr = self.df[x].value_counts().plot(kind='bar')
-        fig, ax = plt.subplots()
-        ax.plt.figure(figsize=(8, 6))
-        ax.plt.xlabel(x)
-        ax.plt.ylabel("Frecuencia")
-        ax.plt.title(f"Gráfico de Barras para {x}")
+        fig, ax = plt.subplots(arr)
+        # ax.figure(figsize=(8, 6))
+        ax.xlabel(x)
+        ax.ylabel("Frecuencia")
+        ax.title(f"Gráfico de Barras para {x}")
         st.pyplot(fig)
 
     def graficas(self):
@@ -94,12 +88,12 @@ class dashboard():
             "", "Numerica", "Categorica"])
         if typeVar == "Numerica":
             variable_seleccionada = st.multiselect(
-                "Selecciona las variables numericas **(Una o Mas)**.", self.var_numeric)
+                "Selecciona las variables numericas **(dos variables)**.", self.var_numeric)
             if variable_seleccionada != [] and len(variable_seleccionada) == 2:
                 self.scatter_plot(
                     variable_seleccionada[0], variable_seleccionada[1])
             else:
-                st.write("seleccione dos variables.")
+                st.write("Seleccione dos variables.")
 
         elif typeVar == "Categorica":
             variable_seleccionada = st.selectbox(
