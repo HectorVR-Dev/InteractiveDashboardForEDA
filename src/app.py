@@ -2,6 +2,8 @@ import streamlit as st
 from PIL import Image
 import pandas as pd
 from typing import Union
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class dashboard():
@@ -60,9 +62,44 @@ class dashboard():
                                                            "Graficacion de Variables"])
         if action == "Estadistica Descriptiva":
             self.est_desc()
+        if action == "Graficacion de Variables":
+            self.graficas()
+
+    def scatter_plot(self, x, y):
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+        st.pyplot(fig)
+
+    def bar_plot(self, x):
+        arr = self.df[x].value_counts().plot(kind='bar')
+        fig, ax = plt.subplots(arr)
+        # ax.figure(figsize=(8, 6))
+        ax.xlabel(x)
+        ax.ylabel("Frecuencia")
+        ax.title(f"Gráfico de Barras para {x}")
+        st.pyplot(fig)
 
     def graficas(self):
-        st.write("Hola, que hace")
+        typeVar = st.selectbox("Tipo de Variable:", [
+            "", "Numerica", "Categorica"])
+        if typeVar == "Numerica":
+            variable_seleccionada = st.multiselect(
+                "Selecciona las variables numericas **(dos variables)**.", self.var_numeric)
+            if variable_seleccionada != [] and len(variable_seleccionada) == 2:
+                self.scatter_plot(
+                    variable_seleccionada[0], variable_seleccionada[1])
+            else:
+                st.write("Seleccione dos variables.")
+
+        elif typeVar == "Categorica":
+            variable_seleccionada = st.selectbox(
+                "Selecciona las variable categorica:", self.var_categoric)
+            if variable_seleccionada != '':
+                arr = self.df[variable_seleccionada]
+                fig, ax = plt.subplots()
+                ax.hist(arr, bins=20)
+                fig.patch.set_facecolor("#F3F0F0")
+                st.pyplot(fig)
 
     def est_desc(self):
         typeVar = st.selectbox("Tipo de Variable:", [
