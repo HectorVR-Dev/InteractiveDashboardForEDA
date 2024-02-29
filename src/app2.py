@@ -12,14 +12,15 @@ class dashboard():
         st.set_page_config(page_title="Interactive Dashboard",
                            page_icon=icon, layout="wide")
         self.var_numeric = ['AVANCE_CARRERA', 'EDAD', 'NUMERO_MATRICULAS',
-                            'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'ESTRATO', 'PUNTAJE_ADMISION']
-        self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'COD_DEPTO_RESIDENCIA', 'COD_MUN_RESIDENCIA', 'COD_PROVINCIA',
-                              'COD_MINICIPIO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
+                            'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'PUNTAJE_ADMISION']
+        self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'ESTRATO', 'COD_DEPTO_RESIDENCIA', 'MUNICIPIO_RESIDENCIA', 'COD_PROVINCIA',
+                              'MUNICIPIO_NACIMIENTO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
 
         st.sidebar.title("Navegación")
         self.page = st.sidebar.radio("", ["Inicio", "EDA and Visualización", "Filtros Interactivos",
                                      "Conclusiones y Recomendaciones", "Recursos Adicionales", "Feedback y Contacto"])
-
+        self.vars = self.df.columns.to_list()
+        self.vars.insert(0, "")
         st.sidebar.image(img, width=200)
         self.pages = {'Inicio': self.show_home,
                       'EDA and Visualización': self.show_eda,
@@ -27,8 +28,6 @@ class dashboard():
                       'Conclusiones y Recomendaciones': self.show_conclusions,
                       'Recursos Adicionales': self.show_resources,
                       'Feedback y Contacto': self.show_feedback}
-        self.vars = self.df.columns.to_list()
-        self.vars.insert(0, "---")
 
         self.pages[self.page]()
 
@@ -77,16 +76,36 @@ class dashboard():
         elif typeVar == "Categorica":
             variable_seleccionada = st.selectbox(
                 "Selecciona las variable categorica:", self.var_categoric)
-            if variable_seleccionada != '':
+
+            if variable_seleccionada in ['COD_MINICIPIO', 'MUNICIPIO_RESIDENCIA']:
+                t = pd.read_csv("data/listMunic.csv")
+                frecuencia = t[variable_seleccionada].value_counts()
+                porcentaje = t[variable_seleccionada].value_counts(
+                    normalize=True)*100
+                est_cat = pd.DataFrame(
+                    {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
+                st.dataframe(est_cat, use_container_width=True)
+
+            elif variable_seleccionada != '':
                 frecuencia = self.df[variable_seleccionada].value_counts()
                 porcentaje = self.df[variable_seleccionada].value_counts(
                     normalize=True)*100
                 est_cat = pd.DataFrame(
                     {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
                 if variable_seleccionada[:3] == 'COD':
-                    t = pd.read_csv(f'data/{variable_seleccionada}.csv')
-                    est_cat = pd.merge(est_cat, t[[variable_seleccionada, '']])
-                st.dataframe(est_cat, use_container_width=True)
+                    # if variable_seleccionada in :
+                    #    t = pd.read_csv('data/BetterData.csv')
+                    # else:
+                    t = pd.read_csv(
+                        f'data/{variable_seleccionada}.csv')
+                    est_cat = pd.merge(est_cat, t[[
+                        variable_seleccionada, t.columns[1]]], on=variable_seleccionada, how='right')
+                    est_cat = est_cat[[est_cat.columns[-1]] +
+                                      list(est_cat.columns[:-1])]
+                    st.dataframe(est_cat, hide_index=True,
+                                 use_container_width=True)
+                else:
+                    st.dataframe(est_cat, use_container_width=True)
 
     def show_filters(self):
         self.modr = self.df
@@ -410,7 +429,8 @@ class dashboard():
         st.write("¡Nos encantaría conocer tu opinión! Ponte en contacto con nosotros para cualquier comentario o sugerencia.")
 
     def desc_var(self, var):
-        if var == "---":
+        des = ""
+        if var == "":
             des = """
             
             """
@@ -620,58 +640,79 @@ class dashboard():
             
             Estos códigos son utilizados para identificar de manera única el departamento de residencia de cada estudiante en la base de datos.
             """
-        elif var == "COD_MUN_RESIDENCIA":
+        elif var == "MUNICIPIO_RESIDENCIA":
             des = """
-            ### Descripción de la variable COD_MUN_RESIDENCIA
-            La variable COD_MUN_RESIDENCIA es un código entero que está relacionado con el municipio de residencia de cada estudiante. Este código identifica el municipio geográfico en el que reside el estudiante.
+            ### Descripción de la variable MUNICIPIO_RESIDENCIA
+            La variable MUNICIPIO_RESIDENCIA es una variable de tipo string que indica el nombre del municipio en el que reside el estudiante.
 
-            - **Tipo de datos**: Entero (int).
-            - **Rango de valores**: La variable COD_MUN_RESIDENCIA puede tomar valores específicos que corresponden a códigos numéricos asignados a cada municipio.
-            
-            Los códigos de municipio presentes en la base de datos, junto con sus correspondientes municipios, se enumeran a continuación:
+            - **Tipo de datos:** Cadena de caracteres (str).
+            - **Valores posibles:** Los valores de esta variable son los nombres de los municipios donde residen los estudiantes.
 
-            - Código 32: ASTREA
-            - Código 1: VALLEDUPAR
-            - Código 60: BOSCONIA
-            - Código 621: LA PAZ
-            - Código 570: PUEBLO BELLO
-            - Código 13: AGUSTÍN CODAZZI
-            - Código 874: VILLANUEVA
-            - Código 443: MANAURE BALCÓN DEL CESAR
-            - Código 750: SAN DIEGO
-            - Código 228: CURUMANÍ
-            - Código 650: SAN JUAN DEL CESAR
-            - Código 45: BECERRIL
-            - Código 855: URUMITA
-            - Código 250: EL PASO
-            - Código 770: SAN MARTÍN
-            - Código 400: LA JAGUA DE IBIRICO
-            - Código 175: CHIMICHAGUA
-            - Código 517: PAILITAS
-            - Código 420: LA JAGUA DEL PILAR
-            - Código 430: MAICAO
-            - Código 498: OCAÑA
-            - Código 170: CHIBOLO
+            Esta variable proporciona información importante sobre la ubicación geográfica de residencia de los estudiantes. El municipio de residencia puede influir en varios aspectos de la vida estudiantil, incluido el acceso a recursos locales, las condiciones socioeconómicas y las oportunidades educativas y comunitarias disponibles.
 
-            Estos códigos son utilizados para identificar de manera única el municipio de residencia de cada estudiante en la base de datos.
+            La consideración de esta variable puede ser relevante para comprender mejor el contexto socioeconómico y geográfico de los estudiantes, así como para diseñar políticas y programas de apoyo que aborden las necesidades específicas de diferentes comunidades y regiones.
             """
         elif var == "COD_PROVINCIA":
             des = """
             ### Descripción de la variable COD_PROVINCIA
+            La variable COD_PROVINCIA es un código numérico que representa el departamento de nacimiento del estudiante.
+
+            - **Tipo de datos:** Entero (int).
+            - **Valores posibles:** Los valores de esta variable son los códigos numéricos asociados a los departamentos de nacimiento del estudiante.
             
-            [Descripción detallada de la variable COD_PROVINCIA]
+            Los códigos numéricos están asociados a los siguientes departamentos, según el siguiente mapeo:
+
+            - Código 8: ATLÁNTICO
+            - Código 20: CESAR
+            - Código 47: MAGDALENA
+            - Código 11: BOGOTÁ, D.C.
+            - Código 54: NORTE DE SANTANDER
+            - Código 17: CALDAS
+            - Código 44: LA GUAJIRA
+            - Código 25: CUNDINAMARCA
+            - Código 13: BOLÍVAR
+            - Código 5: ANTIOQUIA
+            - Código 76: VALLE DEL CAUCA
+            - Código 68: SANTANDER
+            - Código 50: META
+            - Código 15: BOYACÁ
+            - Código 2: DPTO EXTRANJERO
+            - Código 70: SUCRE
+            - Código 23: CÓRDOBA
+            - Código 52: NARIÑO
+            - Código 19: CAUCA
+            - Código 73: TOLIMA
+
+            Esta variable proporciona información sobre el departamento de origen o nacimiento del estudiante, lo que puede ser relevante para análisis demográficos y estudios de migración y distribución geográfica de la población estudiantil.
             """
-        elif var == "COD_MINICIPIO":
+        elif var == "MUNICIPIO_NACIMIENTO":
             des = """
-            ### Descripción de la variable COD_MINICIPIO
+            ### Descripción de la variable MUNICIPIO_NACIMIENTO
+            La variable MUNICIPIO_NACIMIENTO es una variable de tipo string que indica el nombre del municipio en el que nació el estudiante.
+
+            - **Tipo de datos:** Cadena de caracteres (str).
+            - **Valores posibles:** Los valores de esta variable son los nombres de los municipios donde nacieron los estudiantes.
             
-            [Descripción detallada de la variable COD_MINICIPIO]
+            Esta variable proporciona información importante sobre el lugar de nacimiento de los estudiantes. El municipio de nacimiento puede influir en varios aspectos de la vida y el contexto socioeconómico de los estudiantes.
+
+            La consideración de esta variable puede ser relevante para comprender mejor la distribución geográfica y demográfica de la población estudiantil, así como para analizar posibles disparidades en la atención médica, los recursos educativos y otras condiciones sociales y ambientales que pueden variar según el lugar de nacimiento.
             """
         elif var == "COD_NACIONALIDAD":
             des = """
             ### Descripción de la variable COD_NACIONALIDAD
+            La variable COD_NACIONALIDAD es un código numérico que representa el país de nacionalidad del estudiante.
+
+            - **Tipo de datos:** Entero (int).
+            - **Valores posibles:** Los valores de esta variable son los códigos numéricos asociados a los países de nacionalidad del estudiante.
             
-            [Descripción detallada de la variable COD_NACIONALIDAD]
+            Los códigos numéricos están asociados a los siguientes países, según el siguiente mapeo:
+
+            - Código 170: COLOMBIA
+            - Código 862: VENEZUELA
+            - Código 532: ANTILLAS HOLANDESAS
+            - Código 999: DESCONOCIDA
+            
+            Esta variable proporciona información sobre la nacionalidad del estudiante, lo que puede ser relevante para análisis demográficos y estudios sobre la diversidad cultural y la migración de la población estudiantil.
             """
         elif var == "VICTIMAS_DEL_CONFLICTO":
             des = """
