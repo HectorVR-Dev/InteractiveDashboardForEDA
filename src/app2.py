@@ -6,7 +6,7 @@ from typing import Union
 
 class dashboard():
     def __init__(self):
-        self.df = pd.read_csv("data/Estudiantes_clear.csv")
+        self.df = pd.read_csv("data/Estudiantes_clear2.csv")
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
@@ -89,159 +89,208 @@ class dashboard():
                 st.dataframe(est_cat, use_container_width=True)
 
     def show_filters(self):
-        general = False
         self.modr = self.df
         st.title("Filtros Interactivos")
         st.write(
             "Utiliza los filtros interactivos para personalizar tu análisis de datos.")
         BT = st.multiselect("Filtros", self.vars)
+        with st.expander(label="Filtros", expanded=False):
+            if "COD_PLAN" in BT:
+                self.PLAN = pd.read_csv("data/COD_PLAN.csv")
+                self.CreateMultiSelect(label="COD_PLAN",
+                                       column="COD_PLAN",
+                                       options=self.PLAN.iloc[:, 1].tolist(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.PLAN)
 
-        if "COD_PLAN" in BT:
-            self.PLAN = pd.read_csv("data/COD_PLAN.csv")
-            self.CreateMultiSelect(label="COD_PLAN",
-                                   column="COD_PLAN",
-                                   options=self.PLAN.iloc[:, 1].tolist(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithDDF,
-                                   df=self.PLAN)
+            if "AVANCE_CARRERA" in BT:
+                self.CreateSlider(column="AVANCE_CARRERA",
+                                  min_value=0.,
+                                  max_value=100.,
+                                  values=(0., 100.),
+                                  format="%.1f")
 
-        if "AVANCE_CARRERA" in BT:
-            self.CreateSlider(column="AVANCE_CARRERA",
-                              min_value=0.,
-                              max_value=100.,
-                              values=(0., 100.),
-                              format="%.1f")
+            if "COD_ACCESO" in BT:
+                self.ACCESO = pd.read_csv("data/COD_ACCESO.csv")
+                self.CreateMultiSelect(label="COD_ACCESO",
+                                       column="COD_ACCESO",
+                                       options=self.ACCESO.iloc[:, 1].tolist(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.ACCESO)
+                ShowAccess = st.checkbox(label="Mostrar COD_ACCESO")
+                if ShowAccess:
+                    self.RenameColumns(columns=["COD_ACCESO"])
 
-        if "COD_ACCESO" in BT:
-            self.ACCESO = pd.read_csv("data/COD_ACCESO.csv")
-            self.CreateMultiSelect(label="COD_ACCESO",
-                                   column="COD_ACCESO",
-                                   options=self.ACCESO.iloc[:, 1].tolist(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithDDF,
-                                   df=self.ACCESO)
+            if "COD_SUBACCESO" in BT:
+                self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
+                self.CreateMultiSelect(label="COD_SUBACCESO",
+                                       column="COD_SUBACCESO",
+                                       options=self.SUBACCESO.iloc[:, 1].tolist(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.SUBACCESO)
+                ShowSUBAccess = st.checkbox(label="Mostrar COD_SUBACCESO")
+                if ShowSUBAccess:
+                    self.RenameColumns(columns=["COD_SUBACCESO"])
 
-        if "COD_SUBACCESO" in BT:
-            self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
-            self.CreateMultiSelect(label="COD_SUBACCESO",
-                                   column="COD_SUBACCESO",
-                                   options=self.SUBACCESO.iloc[:, 1].tolist(),
-                                   fuction=self._CreateMultiSelect_WithDDF,
-                                   df=self.SUBACCESO)
+            if "GENERO" in BT:
+                self.CreateMultiSelect(label="GENERO",
+                                       column="GENERO",
+                                       options=self.modr["GENERO"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
 
-        if "GENERO" in BT:
-            self.CreateMultiSelect(label="GENERO",
-                                   column="GENERO",
-                                   options=self.modr["GENERO"].drop_duplicates(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithoutDDF)
+            if "EDAD" in BT:
+                min = self.df["EDAD"].min()
+                max = self.df["EDAD"].max()
+                self.CreateSlider(column="EDAD",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d")
 
-        if "EDAD" in BT:
-            min = self.df["EDAD"].min()
-            max = self.df["EDAD"].max()
-            self.CreateSlider(column="EDAD",
-                              min_value=min,
-                              max_value=max,
-                              values=(min, max),
-                              format="%d")
+            if "PAPA" in BT:
+                min = self.df["PAPA"].min()
+                max = self.df["PAPA"].max()
+                self.CreateSlider(column="PAPA",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%.1f")
 
-        if "PAPA" in BT:
-            min = self.df["PAPA"].min()
-            max = self.df["PAPA"].max()
-            self.CreateSlider(column="PAPA",
-                              min_value=min,
-                              max_value=max,
-                              values=(min, max),
-                              format="%.1f")
+            if "PROME_ACADE" in BT:
+                min = self.df["PROME_ACADE"].min()
+                max = self.df["PROME_ACADE"].max()
+                self.CreateSlider(column="PROME_ACADE",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%0.1f")
 
-        if "PROME_ACADE" in BT:
-            min = self.df["PROME_ACADE"].min()
-            max = self.df["PROME_ACADE"].max()
-            self.CreateSlider(column="PROME_ACADE",
-                              min_value=min,
-                              max_value=max,
-                              values=(min, max),
-                              format="%0.1f")
+            if "PBM_CALCULADO" in BT:
+                min = self.df["PBM_CALCULADO"].min()
+                max = self.df["PBM_CALCULADO"].max()
+                self.CreateSlider(column="PBM_CALCULADO",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d")
 
-        if "PBM_CALCULADO" in BT:
-            min = self.df["PBM_CALCULADO"].min()
-            max = self.df["PBM_CALCULADO"].max()
-            self.CreateSlider(column="PBM_CALCULADO",
-                              min_value=min,
-                              max_value=max,
-                              values=(min, max),
-                              format="%d")
+            if "CONVOCATORIA" in BT:
+                self.CreateMultiSelect(label="CONVOCATORIA",
+                                       column="CONVOCATORIA",
+                                       options=self.df["CONVOCATORIA"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
 
-        if "CONVOCATORIA" in BT:
-            self.CreateMultiSelect(label="CONVOCATORIA",
-                                   column="CONVOCATORIA",
-                                   options=self.df["CONVOCATORIA"].drop_duplicates(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithoutDDF)
+            if "APERTURA" in BT:
+                self.CreateMultiSelect(label="APERTURA",
+                                       column="APERTURA",
+                                       options=self.df["APERTURA"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
 
-        if "APERTURA" in BT:
-            self.CreateMultiSelect(label="APERTURA",
-                                   column="APERTURA",
-                                   options=self.df["APERTURA"].drop_duplicates(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithoutDDF)
+            if "T_DOCUMENTO" in BT:
+                self.CreateMultiSelect(label="T_DOCUMENTO",
+                                       column="T_DOCUMENTO",
+                                       options=self.df["T_DOCUMENTO"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
 
-        if "T_DOCUMENTO" in BT:
-            self.CreateMultiSelect(label="T_DOCUMENTO",
-                                   column="T_DOCUMENTO",
-                                   options=self.df["T_DOCUMENTO"].drop_duplicates(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithoutDDF)
+            if "NUMERO_MATRICULAS" in BT:
+                min = int(self.df["NUMERO_MATRICULAS"].min() - 1)
+                max = int(self.df["NUMERO_MATRICULAS"].max())
+                self.CreateSlider(column="NUMERO_MATRICULAS",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d",
+                                  step=1)
 
-        if "NUMERO_MATRICULAS" in BT:
-            min = int(self.df["NUMERO_MATRICULAS"].min() - 1)
-            max = int(self.df["NUMERO_MATRICULAS"].max())
-            self.CreateSlider(column="NUMERO_MATRICULAS",
-                              min_value=min,
-                              max_value=max,
-                              values=(min, max),
-                              format="%d",
-                              step=1)
+            if "ESTRATO" in BT:
+                min = int(self.df["ESTRATO"].min())
+                max = int(self.df["ESTRATO"].max())
+                self.CreateSlider(column="ESTRATO",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d",
+                                  step=1)
 
-        if "ESTRATO" in BT:
-            min = int(self.df["ESTRATO"].min())
-            max = int(self.df["ESTRATO"].max())
-            self.CreateSlider(column="ESTRATO",
-                              min_value=min,
-                              max_value=max,
-                              values=(min, max),
-                              format="%d",
-                              step=1)
+            if "VICTIMAS_DEL_CONFLICTO" in BT:
+                self.CreateMultiSelect(label="VICTIMAS_DEL_CONFLICTO",
+                                       column="VICTIMAS_DEL_CONFLICTO",
+                                       options=["SI", "NO"],
+                                       fuction=self._CreateMultiSelectModified,
+                                       binary=True)
 
-        if "VICTIMAS_DEL_CONFLICTO" in BT:
-            self.CreateMultiSelect(label="VICTIMAS_DEL_CONFLICTO",
-                                   column="VICTIMAS_DEL_CONFLICTO",
-                                   options=["SI", "NO"],
-                                   fuction=self._CreateMultiSelectModified,
-                                   binary=True)
+            if "DISCAPACIDAD" in BT:
+                self.CreateMultiSelect(label="DISCAPACIDAD",
+                                       column="DISCAPACIDAD",
+                                       options=self.df["DISCAPACIDAD"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
 
-        if "DISCAPACIDAD" in BT:
-            self.CreateMultiSelect(label="DISCAPACIDAD",
-                                   column="DISCAPACIDAD",
-                                   options=self.df["DISCAPACIDAD"].drop_duplicates(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithoutDDF)
+            if "CARACTER_COLEGIO" in BT:
+                self.CreateMultiSelect(label="CARACTER_COLEGIO",
+                                       column="CARACTER_COLEGIO",
+                                       options=self.df["CARACTER_COLEGIO"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
 
-        if "CARACTER_COLEGIO" in BT:
-            self.CreateMultiSelect(label="CARACTER_COLEGIO",
-                                   column="CARACTER_COLEGIO",
-                                   options=self.df["CARACTER_COLEGIO"].drop_duplicates(
-                                   ),
-                                   fuction=self._CreateMultiSelect_WithoutDDF)
+            if "PUNTAJE_ADMISION" in BT:
+                min = self.df["PUNTAJE_ADMISION"].min()
+                max = self.df["PUNTAJE_ADMISION"].max()
+                self.CreateSlider(column="PUNTAJE_ADMISION",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%0.1f")
 
-        if "PUNTAJE_ADMISION" in BT:
-            min = self.df["PUNTAJE_ADMISION"].min()
-            max = self.df["PUNTAJE_ADMISION"].max()
-            self.CreateSlider(column="PUNTAJE_ADMISION",
-                              min_value=min,
-                              max_value=max,
-                              values=(min, max),
-                              format="%0.1f")
+            if "COD_DEPTO_RESIDENCIA" in BT:
+                self.CDRESIDENCIA = pd.read_csv(
+                    "data/COD_DEPTO_RESIDENCIA.csv")
+                self.CreateMultiSelect(label="COD_DEPTO_RESIDENCIA",
+                                       column="COD_DEPTO_RESIDENCIA",
+                                       options=self.CDRESIDENCIA.iloc[:, 1],
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.CDRESIDENCIA)
+
+            if "MUNICIPIO_RESIDENCIA" in BT:
+                self.CreateMultiSelect(label="MUNICIPIO_RESIDENCIA",
+                                       column="MUNICIPIO_RESIDENCIA",
+                                       options=self.df["MUNICIPIO_RESIDENCIA"].dropna(
+                                       ).drop_duplicates(),
+                                       fuction=self._CreateMultiselectWithNAN)
+
+            if "COD_PROVINCIA" in BT:
+                self.CPROVINCIA = pd.read_csv("data/COD_PROVINCIA.csv")
+                self.CreateMultiSelect(label="COD_PROVINCIA",
+                                       column="COD_PROVINCIA",
+                                       options=self.CPROVINCIA.iloc[:, 1],
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.CPROVINCIA)
+            if "MUNICIPIO_NACIMIENTO" in BT:
+                self.CreateMultiSelect(label="MUNICIPIO_NACIMIENTO",
+                                       column="MUNICIPIO_NACIMIENTO",
+                                       options=self.df["MUNICIPIO_NACIMIENTO"].dropna(
+                                       ).drop_duplicates(),
+                                       fuction=self._CreateMultiselectWithNAN)
+
+            if "COD_NACIONALIDAD" in BT:
+                self.CNACIONALIDAD = pd.read_csv("data/COD_NACIONALIDAD.csv")
+                self.CreateMultiSelect(label="COD_NACIONALIDAD",
+                                       column="COD_NACIONALIDAD",
+                                       options=self.CNACIONALIDAD.iloc[:, 1],
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.CNACIONALIDAD)
+        if BT:
+            st.write(f"Se han encontrado {
+                len(self.modr)}  elementos para los filtros aplicados")
+        self.RenameColumns(
+            columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
 
         st.dataframe(self.modr,
                      column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA",
@@ -256,6 +305,13 @@ class dashboard():
                                                                                         format="%f")},
                      use_container_width=True,
                      hide_index=True)
+
+    def RenameColumns(self, **args):
+        for column in args["columns"]:
+            rename = pd.read_csv(f"data/{column}.csv")
+            vars = rename.columns[1]
+            self.modr[column] = self.modr[column].map(
+                rename.set_index(column)[vars])
 
     def CreateSlider(self,
                      column: str,
@@ -310,19 +366,24 @@ class dashboard():
                                    **args):
         Select = st.multiselect(label=label,
                                 options=options)
-
         if "SI" in Select and "NO" not in Select:
-            if args["binary"]:
-                vcc = 1
-            else:
-                vcc = Select
-            self.modr = self.modr[self.modr[column].isin([vcc])]
+            self.modr = self.modr[self.modr[column].isin(["SI"])]
         elif "NO" in Select and "SI" not in Select:
-            if args["binary"]:
-                vcc = 0
-            else:
-                vcc = Select
-            self.modr = self.modr[self.modr[column].isin([vcc])]
+            self.modr = self.modr[self.modr[column].isin(["NO"])]
+        else:
+            self.modr = self.modr
+
+    def _CreateMultiselectWithNAN(self,
+                                  label: str,
+                                  column: str,
+                                  options: list):
+
+        Select = st.multiselect(label=label,
+                                options=options)
+        if not Select:
+            self.modr = self.modr
+        else:
+            self.modr = self.modr[self.modr[column].isin(Select)]
 
     def CreateMultiSelect(self,
                           label: str,
