@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
 import pandas as pd
+from typing import Union
 
 
 class dashboard():
@@ -90,63 +91,249 @@ class dashboard():
     def show_filters(self):
         general = False
         self.modr = self.df
-        self.cars = pd.read_csv("data/COD_PLAN.csv")
         st.title("Filtros Interactivos")
         st.write(
             "Utiliza los filtros interactivos para personalizar tu análisis de datos.")
         BT = st.multiselect("Filtros", self.vars)
 
         if "COD_PLAN" in BT:
-            carr = st.multiselect("Carrera", ["BIOLOGÍA", "ESTADÍSTICA", "GEOGRAFÍA",
-                                  "GESTIÓN CULTURAL Y COMUNICATIVA", "INGENIERÍA BIOLÓGICA", "INGENIERÍA MECATRÓNICA"])
-            carr = self.cars[self.cars["PLAN"].isin(
-                carr)]["COD_PLAN"].tolist()
-            self.modr = self.modr[self.modr["COD_PLAN"].isin(carr)]
+            self.PLAN = pd.read_csv("data/COD_PLAN.csv")
+            self.CreateMultiSelect(label="COD_PLAN",
+                                   column="COD_PLAN",
+                                   options=self.PLAN.iloc[:, 1].tolist(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithDDF,
+                                   df=self.PLAN)
+
         if "AVANCE_CARRERA" in BT:
-            range1 = st.slider("AVANCE_CARRERA", min_value=0.0,
-                               max_value=100.0, format="%d", value=(0.0, 100.0))
-            self.modr = self.modr[(self.modr["AVANCE_CARRERA"] <=
-                                  range1[1]) & (self.modr["AVANCE_CARRERA"] >= range1[0])]
+            self.CreateSlider(column="AVANCE_CARRERA",
+                              min_value=0.,
+                              max_value=100.,
+                              values=(0., 100.),
+                              format="%.1f")
 
         if "COD_ACCESO" in BT:
-            self.cas = pd.read_csv("data/COD_ACCESO.csv")
-            ca = st.multiselect(
-                "Tipo de Acceso", ["EXAMEN DE ADMISIÓN A LA UNIVERSIDAD", "TRASLADO"])
+            self.ACCESO = pd.read_csv("data/COD_ACCESO.csv")
+            self.CreateMultiSelect(label="COD_ACCESO",
+                                   column="COD_ACCESO",
+                                   options=self.ACCESO.iloc[:, 1].tolist(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithDDF,
+                                   df=self.ACCESO)
 
-            ca = self.cas[self.cas["ACCESO"].isin(
-                ca)]["COD_ACCESO"].tolist()
-            self.modr = self.modr[self.modr["COD_ACCESO"].isin(ca)]
         if "COD_SUBACCESO" in BT:
-            self.csa = pd.read_csv("data/COD_SUBACCESO.csv")
-            csa = st.multiselect("Tipo de Sub-Acceso", ["PROGRAMA DE ADMISIÓN ESPECIAL PARA LOS PROGRAMAS DE PREGRADO SEDE LA PAZ", "REGULAR DE PREGRADO",
-                                 "VÍCTIMAS DEL CONFLICTO ARMADO EN COLOMBIA", "PAES - POBLACION NEGRA, AFROCOLOMBIANA, PALENQUERA Y RAIZAL", "PAES - INDÍGENA"])
-
-            csa = self.csa[self.csa["SUBACCESO"].isin(
-                csa)]["COD_SUBACCESO"].tolist()
-            self.modr = self.modr[self.modr["COD_SUBACCESO"].isin(csa)]
+            self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
+            self.CreateMultiSelect(label="COD_SUBACCESO",
+                                   column="COD_SUBACCESO",
+                                   options=self.SUBACCESO.iloc[:, 1].tolist(),
+                                   fuction=self._CreateMultiSelect_WithDDF,
+                                   df=self.SUBACCESO)
 
         if "GENERO" in BT:
-            self.genre = pd.read_csv("data/COD_SUBACCESO.csv")
-            gen = st.multiselect("Genero", ["HOMBRE", "MUJER"])
+            self.CreateMultiSelect(label="GENERO",
+                                   column="GENERO",
+                                   options=self.modr["GENERO"].drop_duplicates(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithoutDDF)
 
-            self.modr = self.modr[self.modr["GENERO"].isin(gen)]
         if "EDAD" in BT:
-            range2 = st.slider("EDAD", min_value=16,
-                               max_value=42, format="%d", value=(16, 42))
-            self.modr = self.modr[(self.modr["EDAD"] <= range2[1]) & (
-                self.modr["EDAD"] >= range2[0])]
+            min = self.df["EDAD"].min()
+            max = self.df["EDAD"].max()
+            self.CreateSlider(column="EDAD",
+                              min_value=min,
+                              max_value=max,
+                              values=(min, max),
+                              format="%d")
+
         if "PAPA" in BT:
-            range3 = st.slider("PAPA", min_value=0.0,
-                               max_value=5.0, format="%f", value=(0.0, 5.0))
-            self.modr = self.modr[(self.modr["PAPA"] <= range3[1]) & (
-                self.modr["PAPA"] >= range3[0])]
+            min = self.df["PAPA"].min()
+            max = self.df["PAPA"].max()
+            self.CreateSlider(column="PAPA",
+                              min_value=min,
+                              max_value=max,
+                              values=(min, max),
+                              format="%.1f")
+
         if "PROME_ACADE" in BT:
-            range4 = st.slider("PROME_ACADE", min_value=0.0,
-                               max_value=5.0, format="%f", value=(0.0, 5.0))
-            self.modr = self.modr[(self.modr["PAPA"] <= range4[1]) & (
-                self.modr["PAPA"] >= range4[0])]
-        st.dataframe(
-            self.modr, column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA", help="El avance del estudiante en su carrera actual", min_value=0.0, max_value=100.0, format="%f")}, use_container_width=True, hide_index=True)
+            min = self.df["PROME_ACADE"].min()
+            max = self.df["PROME_ACADE"].max()
+            self.CreateSlider(column="PROME_ACADE",
+                              min_value=min,
+                              max_value=max,
+                              values=(min, max),
+                              format="%0.1f")
+
+        if "PBM_CALCULADO" in BT:
+            min = self.df["PBM_CALCULADO"].min()
+            max = self.df["PBM_CALCULADO"].max()
+            self.CreateSlider(column="PBM_CALCULADO",
+                              min_value=min,
+                              max_value=max,
+                              values=(min, max),
+                              format="%d")
+
+        if "CONVOCATORIA" in BT:
+            self.CreateMultiSelect(label="CONVOCATORIA",
+                                   column="CONVOCATORIA",
+                                   options=self.df["CONVOCATORIA"].drop_duplicates(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithoutDDF)
+
+        if "APERTURA" in BT:
+            self.CreateMultiSelect(label="APERTURA",
+                                   column="APERTURA",
+                                   options=self.df["APERTURA"].drop_duplicates(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithoutDDF)
+
+        if "T_DOCUMENTO" in BT:
+            self.CreateMultiSelect(label="T_DOCUMENTO",
+                                   column="T_DOCUMENTO",
+                                   options=self.df["T_DOCUMENTO"].drop_duplicates(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithoutDDF)
+
+        if "NUMERO_MATRICULAS" in BT:
+            min = int(self.df["NUMERO_MATRICULAS"].min() - 1)
+            max = int(self.df["NUMERO_MATRICULAS"].max())
+            self.CreateSlider(column="NUMERO_MATRICULAS",
+                              min_value=min,
+                              max_value=max,
+                              values=(min, max),
+                              format="%d",
+                              step=1)
+
+        if "ESTRATO" in BT:
+            min = int(self.df["ESTRATO"].min())
+            max = int(self.df["ESTRATO"].max())
+            self.CreateSlider(column="ESTRATO",
+                              min_value=min,
+                              max_value=max,
+                              values=(min, max),
+                              format="%d",
+                              step=1)
+
+        if "VICTIMAS_DEL_CONFLICTO" in BT:
+            self.CreateMultiSelect(label="VICTIMAS_DEL_CONFLICTO",
+                                   column="VICTIMAS_DEL_CONFLICTO",
+                                   options=["SI", "NO"],
+                                   fuction=self._CreateMultiSelectModified,
+                                   binary=True)
+
+        if "DISCAPACIDAD" in BT:
+            self.CreateMultiSelect(label="DISCAPACIDAD",
+                                   column="DISCAPACIDAD",
+                                   options=self.df["DISCAPACIDAD"].drop_duplicates(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithoutDDF)
+
+        if "CARACTER_COLEGIO" in BT:
+            self.CreateMultiSelect(label="CARACTER_COLEGIO",
+                                   column="CARACTER_COLEGIO",
+                                   options=self.df["CARACTER_COLEGIO"].drop_duplicates(
+                                   ),
+                                   fuction=self._CreateMultiSelect_WithoutDDF)
+
+        if "PUNTAJE_ADMISION" in BT:
+            min = self.df["PUNTAJE_ADMISION"].min()
+            max = self.df["PUNTAJE_ADMISION"].max()
+            self.CreateSlider(column="PUNTAJE_ADMISION",
+                              min_value=min,
+                              max_value=max,
+                              values=(min, max),
+                              format="%0.1f")
+
+        st.dataframe(self.modr,
+                     column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA",
+                                                                                      help="El avance del estudiante en su carrera actual",
+                                                                                      min_value=0.0,
+                                                                                      max_value=100.0,
+                                                                                      format="%f"),
+                                    "PUNTAJE_ADMISION": st.column_config.ProgressColumn("PUNTAJE_ADMISION",
+                                                                                        help="Puntaje obtenido por el estudiante en la prueba de admision",
+                                                                                        min_value=None,
+                                                                                        max_value=888.484,
+                                                                                        format="%f")},
+                     use_container_width=True,
+                     hide_index=True)
+
+    def CreateSlider(self,
+                     column: str,
+                     min_value: Union[int, float],
+                     max_value: Union[int, float],
+                     values: tuple,
+                     format: str,
+                     **args):
+        if args:
+            range = st.slider(column,
+                              min_value=min_value,
+                              max_value=max_value,
+                              format=format,
+                              value=values,
+                              step=args["step"])
+            if range[0] == 0:
+                self.modr = self.modr
+            else:
+                self.modr = self.modr[(self.modr[column] <=
+                                       range[1]) & (self.modr[column] >= range[0])]
+        else:
+            range = st.slider(column,
+                              min_value=min_value,
+                              max_value=max_value,
+                              format=format,
+                              value=values)
+            self.modr = self.modr[(self.modr[column] <=
+                                   range[1]) & (self.modr[column] >= range[0])]
+
+    def _CreateMultiSelect_WithDDF(self,
+                                   label: str,
+                                   column: str,
+                                   options: list,
+                                   df: pd.DataFrame):
+        Select = st.multiselect(label=label,
+                                options=options)
+        Select = df[df.iloc[:, 1].isin(Select)].iloc[:, 0].tolist()
+        self.modr = self.modr[self.modr[column].isin(Select)]
+
+    def _CreateMultiSelect_WithoutDDF(self,
+                                      label: str,
+                                      column: str,
+                                      options: list):
+        Select = st.multiselect(label=label,
+                                options=options)
+        self.modr = self.modr[self.modr[column].isin(Select)]
+
+    def _CreateMultiSelectModified(self,
+                                   label: str,
+                                   column: str,
+                                   options: list,
+                                   **args):
+        Select = st.multiselect(label=label,
+                                options=options)
+
+        if "SI" in Select and "NO" not in Select:
+            if args["binary"]:
+                vcc = 1
+            else:
+                vcc = Select
+            self.modr = self.modr[self.modr[column].isin([vcc])]
+        elif "NO" in Select and "SI" not in Select:
+            if args["binary"]:
+                vcc = 0
+            else:
+                vcc = Select
+            self.modr = self.modr[self.modr[column].isin([vcc])]
+
+    def CreateMultiSelect(self,
+                          label: str,
+                          column: str,
+                          options: list,
+                          fuction,
+                          **args):
+        if args:
+            fuction(label, column, options, **args)
+        else:
+            fuction(label, column, options)
 
     def show_conclusions(self):
         st.title("Conclusiones y Recomendaciones")
