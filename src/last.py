@@ -1,38 +1,34 @@
 import streamlit as st
 from PIL import Image
 import pandas as pd
+from typing import Union
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 class dashboard():
     def __init__(self):
-        self.df = pd.read_csv("data/Estudiantes_clear.csv")
+        self.df = pd.read_csv("data/Estudiantes_clear2.csv")
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
                            page_icon=icon, layout="wide")
         self.var_numeric = ['AVANCE_CARRERA', 'EDAD', 'NUMERO_MATRICULAS',
-                            'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'ESTRATO', 'PUNTAJE_ADMISION']
-        self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'COD_DEPTO_RESIDENCIA', 'COD_MUN_RESIDENCIA', 'COD_PROVINCIA',
-                              'COD_MINICIPIO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
-        self.var_graficos = ['Dispersion']
-
+                            'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'PUNTAJE_ADMISION']
+        self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'ESTRATO', 'COD_DEPTO_RESIDENCIA', 'MUNICIPIO_RESIDENCIA', 'COD_PROVINCIA',
+                              'MUNICIPIO_NACIMIENTO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
+        self.plt = plt
         st.sidebar.title("Navegación")
         self.page = st.sidebar.radio("", ["Inicio", "EDA and Visualización", "Filtros Interactivos",
                                      "Conclusiones y Recomendaciones", "Recursos Adicionales", "Feedback y Contacto"])
-
+        self.vars = self.df.columns.to_list()
+        self.vars.insert(0, "")
         st.sidebar.image(img, width=200)
-
         self.pages = {'Inicio': self.show_home,
                       'EDA and Visualización': self.show_eda,
                       'Filtros Interactivos': self.show_filters,
                       'Conclusiones y Recomendaciones': self.show_conclusions,
                       'Recursos Adicionales': self.show_resources,
                       'Feedback y Contacto': self.show_feedback}
-
-        self.vars = self.df.columns.to_list()
-        self.vars.insert(0, "---")
 
         self.pages[self.page]()
 
@@ -65,44 +61,41 @@ class dashboard():
                                                            "Graficacion de Variables"])
         if action == "Estadistica Descriptiva":
             self.est_desc()
+        elif action == "Graficacion de Variables":
+            self.GragpsVar()
 
-        if action == "Graficacion de Variables":
-            self.graficas()
+    def histogram(self, data):
+        data = self.df[data]
+        fig, histogram = plt.subplots()
+        histogram.hist(data)
+        return fig
 
-    def scatter_plot(self, x, y):
-        fig, ax = plt.subplots()
-        ax.scatter(x, y)
-        st.pyplot(fig)
+    def boxplot(self, data):
+        fig, boxplotov = plt.subplots()
+        boxplotov.boxplot(data)
+        return fig
 
-    def bar_plot(self, x):
-        arr = self.df[x].value_counts().plot(kind='bar')
-        fig, ax = plt.subplots(arr)
-        # ax.figure(figsize=(8, 6))
-        ax.xlabel(x)
-        ax.ylabel("Frecuencia")
-        ax.title(f"Gráfico de Barras para {x}")
-        st.pyplot(fig)
-
-    def graficas(self):
-        typeVar = st.selectbox("Tipo de Variable:", [
-            "", "Numerica", "Categorica"])
-        if typeVar == "Numerica":
-            variable_seleccionada = st.multiselect(
-                "Selecciona las variables numericas **(dos variables)**.", self.var_numeric)
-            if variable_seleccionada != [] and len(variable_seleccionada) == 2:
-                self.scatter_plot(
-                    variable_seleccionada[0], variable_seleccionada[1])
+    def barras(self, data, **args):
+        count, _ = self.count(data)
+        if data[:3] == 'COD':
+            if data == "COD_PLAN":
+                label = count.iloc[:, 1]
             else:
-                st.write("Seleccione dos variables.")
-
-        elif typeVar == "Categorica":
-            variable_seleccionada = st.selectbox(
-                "Selecciona las variable categorica:", self.var_categoric)
-            if variable_seleccionada != '':
-                arr = self.df[variable_seleccionada]
-                fig, ax = plt.subplots()
-                ax.hist(arr, bins=20)
-                st.pyplot(fig)
+                label = count.iloc[:, 1]
+                label = [str(int(lab)) for lab in label]
+            datav = count.iloc[:, 2].tolist()
+        else:
+            label = count.index.tolist()
+            label = [str(lab) for lab in label]
+            datav = count.iloc[:, 0].tolist()
+        fig, barras = plt.subplots()
+        barras.bar(label, datav)
+        if args:
+            barras.tick_params(
+                axis='x', labelsize=args["labelsize"], rotation=90)
+            barras.set_xlabel(data)
+        plt.tight_layout()
+        return fig
 
     def est_desc(self):
         typeVar = st.selectbox("Tipo de Variable:", [
@@ -113,43 +106,379 @@ class dashboard():
             if variable_seleccionada != []:
                 estadisticas = self.df[variable_seleccionada].describe()
                 st.dataframe(estadisticas, use_container_width=True)
-
         elif typeVar == "Categorica":
             variable_seleccionada = st.selectbox(
                 "Selecciona las variable categorica:", self.var_categoric)
-            if variable_seleccionada != '':
-                frecuencia = self.df[variable_seleccionada].value_counts()
-                porcentaje = self.df[variable_seleccionada].value_counts(
-                    normalize=True)*100
-                est_cat = pd.DataFrame(
-                    {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
-                if variable_seleccionada[:3] == 'COD':
-                    t = pd.read_csv(f'data/{variable_seleccionada}.csv')
-                    est_cat = pd.merge(est_cat, t[[variable_seleccionada, '']])
-                st.dataframe(est_cat, use_container_width=True)
+            if variable_seleccionada:
+                self.showdf(variable_seleccionada)
+
+    def showdf(self, var):
+        est_cat, index = self.count(
+            variable_seleccionada=var)
+        if index == "nh":
+            st.dataframe(est_cat, use_container_width=True)
+        else:
+            st.dataframe(est_cat, hide_index=True,
+                         use_container_width=True)
+
+    def count(self, variable_seleccionada):
+        if variable_seleccionada in ['COD_MINICIPIO', 'MUNICIPIO_RESIDENCIA']:
+            t = pd.read_csv("data/listMunic.csv")
+            frecuencia = t[variable_seleccionada].value_counts()
+            porcentaje = t[variable_seleccionada].value_counts(
+                normalize=True)*100
+            est_cat = pd.DataFrame(
+                {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
+            return est_cat, "nh"
+
+        elif variable_seleccionada != '':
+            frecuencia = self.df[variable_seleccionada].value_counts()
+            porcentaje = self.df[variable_seleccionada].value_counts(
+                normalize=True)*100
+            est_cat = pd.DataFrame(
+                {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
+            if variable_seleccionada[:3] == 'COD':
+                t = pd.read_csv(
+                    f'data/{variable_seleccionada}.csv')
+                est_cat = pd.merge(est_cat, t[[
+                    variable_seleccionada, t.columns[1]]], on=variable_seleccionada, how='right')
+                est_cat = est_cat[[est_cat.columns[-1]] +
+                                  list(est_cat.columns[:-1])]
+                return est_cat, "h"
+            else:
+                return est_cat, "nh"
+
+    def GragpsVar(self):
+        tpg = st.multiselect("Tipo de grafico", options=[
+                             "HISTOGRAMA", "BARRAS"], max_selections=1)
+        if "HISTOGRAMA" in tpg:
+            var = st.selectbox("Variables permitidas",
+                               options=[""]+self.var_numeric)
+            if len(var) > 1:
+                st.pyplot(self.histogram(var))
+                self.showdf(var)
+            else:
+                pass
+        elif "BARRAS" in tpg:
+            var = st.selectbox("Variables permitidas",
+                               options=self.var_categoric)
+            if len(var) < 1:
+                pass
+            elif "MUNICIPIO_NACIMIENTO" in var:
+                st.pyplot(self.barras(var, labelsize=4))
+                self.showdf(var)
+
+            else:
+                st.pyplot(self.barras(var, labelsize=12))
+                self.showdf(var)
 
     def show_filters(self):
         self.modr = self.df
-        self.cars = pd.read_csv("data/COD_PLAN.csv")
         st.title("Filtros Interactivos")
         st.write(
             "Utiliza los filtros interactivos para personalizar tu análisis de datos.")
         BT = st.multiselect("Filtros", self.vars)
-        if not BT:
-            st.dataframe(self.modr, use_container_width=True, hide_index=True)
-        if "COD_PLAN" in BT:
-            carr = st.multiselect("Carrera", ["BIOLOGÍA", "ESTADÍSTICA", "GEOGRAFÍA",
-                                  "GESTIÓN CULTURAL Y COMUNICATIVA", "INGENIERÍA BIOLÓGICA", "INGENIERÍA MECATRÓNICA"])
+        with st.expander(label="Filtros", expanded=False):
+            if "COD_PLAN" in BT:
+                self.PLAN = pd.read_csv("data/COD_PLAN.csv")
+                self.CreateMultiSelect(label="COD_PLAN",
+                                       column="COD_PLAN",
+                                       options=self.PLAN.iloc[:, 1].tolist(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.PLAN)
 
-            if not carr:
-                st.dataframe(self.modr)
+            if "AVANCE_CARRERA" in BT:
+                self.CreateSlider(column="AVANCE_CARRERA",
+                                  min_value=0.,
+                                  max_value=100.,
+                                  values=(0., 100.),
+                                  format="%.1f")
+
+            if "COD_ACCESO" in BT:
+                self.ACCESO = pd.read_csv("data/COD_ACCESO.csv")
+                self.CreateMultiSelect(label="COD_ACCESO",
+                                       column="COD_ACCESO",
+                                       options=self.ACCESO.iloc[:, 1].tolist(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.ACCESO)
+                ShowAccess = st.checkbox(label="Mostrar COD_ACCESO")
+                if ShowAccess:
+                    self.RenameColumns(columns=["COD_ACCESO"])
+
+            if "COD_SUBACCESO" in BT:
+                self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
+                self.CreateMultiSelect(label="COD_SUBACCESO",
+                                       column="COD_SUBACCESO",
+                                       options=self.SUBACCESO.iloc[:, 1].tolist(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.SUBACCESO)
+                ShowSUBAccess = st.checkbox(label="Mostrar COD_SUBACCESO")
+                if ShowSUBAccess:
+                    self.RenameColumns(columns=["COD_SUBACCESO"])
+
+            if "GENERO" in BT:
+                self.CreateMultiSelect(label="GENERO",
+                                       column="GENERO",
+                                       options=self.modr["GENERO"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
+
+            if "EDAD" in BT:
+                min = self.df["EDAD"].min()
+                max = self.df["EDAD"].max()
+                self.CreateSlider(column="EDAD",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d")
+
+            if "PAPA" in BT:
+                min = self.df["PAPA"].min()
+                max = self.df["PAPA"].max()
+                self.CreateSlider(column="PAPA",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%.1f")
+
+            if "PROME_ACADE" in BT:
+                min = self.df["PROME_ACADE"].min()
+                max = self.df["PROME_ACADE"].max()
+                self.CreateSlider(column="PROME_ACADE",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%0.1f")
+
+            if "PBM_CALCULADO" in BT:
+                min = self.df["PBM_CALCULADO"].min()
+                max = self.df["PBM_CALCULADO"].max()
+                self.CreateSlider(column="PBM_CALCULADO",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d")
+
+            if "CONVOCATORIA" in BT:
+                self.CreateMultiSelect(label="CONVOCATORIA",
+                                       column="CONVOCATORIA",
+                                       options=self.df["CONVOCATORIA"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
+
+            if "APERTURA" in BT:
+                self.CreateMultiSelect(label="APERTURA",
+                                       column="APERTURA",
+                                       options=self.df["APERTURA"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
+
+            if "T_DOCUMENTO" in BT:
+                self.CreateMultiSelect(label="T_DOCUMENTO",
+                                       column="T_DOCUMENTO",
+                                       options=self.df["T_DOCUMENTO"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
+
+            if "NUMERO_MATRICULAS" in BT:
+                min = int(self.df["NUMERO_MATRICULAS"].min() - 1)
+                max = int(self.df["NUMERO_MATRICULAS"].max())
+                self.CreateSlider(column="NUMERO_MATRICULAS",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d",
+                                  step=1)
+
+            if "ESTRATO" in BT:
+                min = int(self.df["ESTRATO"].min())
+                max = int(self.df["ESTRATO"].max())
+                self.CreateSlider(column="ESTRATO",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d",
+                                  step=1)
+
+            if "VICTIMAS_DEL_CONFLICTO" in BT:
+                self.CreateMultiSelect(label="VICTIMAS_DEL_CONFLICTO",
+                                       column="VICTIMAS_DEL_CONFLICTO",
+                                       options=["SI", "NO"],
+                                       fuction=self._CreateMultiSelectModified,
+                                       binary=True)
+
+            if "DISCAPACIDAD" in BT:
+                self.CreateMultiSelect(label="DISCAPACIDAD",
+                                       column="DISCAPACIDAD",
+                                       options=self.df["DISCAPACIDAD"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
+
+            if "CARACTER_COLEGIO" in BT:
+                self.CreateMultiSelect(label="CARACTER_COLEGIO",
+                                       column="CARACTER_COLEGIO",
+                                       options=self.df["CARACTER_COLEGIO"].drop_duplicates(
+                                       ),
+                                       fuction=self._CreateMultiSelect_WithoutDDF)
+
+            if "PUNTAJE_ADMISION" in BT:
+                min = self.df["PUNTAJE_ADMISION"].min()
+                max = self.df["PUNTAJE_ADMISION"].max()
+                self.CreateSlider(column="PUNTAJE_ADMISION",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%0.1f")
+
+            if "COD_DEPTO_RESIDENCIA" in BT:
+                self.CDRESIDENCIA = pd.read_csv(
+                    "data/COD_DEPTO_RESIDENCIA.csv")
+                self.CreateMultiSelect(label="COD_DEPTO_RESIDENCIA",
+                                       column="COD_DEPTO_RESIDENCIA",
+                                       options=self.CDRESIDENCIA.iloc[:, 1],
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.CDRESIDENCIA)
+
+            if "MUNICIPIO_RESIDENCIA" in BT:
+                self.CreateMultiSelect(label="MUNICIPIO_RESIDENCIA",
+                                       column="MUNICIPIO_RESIDENCIA",
+                                       options=self.df["MUNICIPIO_RESIDENCIA"].dropna(
+                                       ).drop_duplicates(),
+                                       fuction=self._CreateMultiselectWithNAN)
+
+            if "COD_PROVINCIA" in BT:
+                self.CPROVINCIA = pd.read_csv("data/COD_PROVINCIA.csv")
+                self.CreateMultiSelect(label="COD_PROVINCIA",
+                                       column="COD_PROVINCIA",
+                                       options=self.CPROVINCIA.iloc[:, 1],
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.CPROVINCIA)
+            if "MUNICIPIO_NACIMIENTO" in BT:
+                self.CreateMultiSelect(label="MUNICIPIO_NACIMIENTO",
+                                       column="MUNICIPIO_NACIMIENTO",
+                                       options=self.df["MUNICIPIO_NACIMIENTO"].dropna(
+                                       ).drop_duplicates(),
+                                       fuction=self._CreateMultiselectWithNAN)
+
+            if "COD_NACIONALIDAD" in BT:
+                self.CNACIONALIDAD = pd.read_csv("data/COD_NACIONALIDAD.csv")
+                self.CreateMultiSelect(label="COD_NACIONALIDAD",
+                                       column="COD_NACIONALIDAD",
+                                       options=self.CNACIONALIDAD.iloc[:, 1],
+                                       fuction=self._CreateMultiSelect_WithDDF,
+                                       df=self.CNACIONALIDAD)
+        if BT:
+            st.write(f"Se han encontrado {
+                len(self.modr)}  elementos para los filtros aplicados")
+        self.RenameColumns(
+            columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
+
+        st.dataframe(self.modr,
+                     column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA",
+                                                                                      help="El avance del estudiante en su carrera actual",
+                                                                                      min_value=0.0,
+                                                                                      max_value=100.0,
+                                                                                      format="%f"),
+                                    "PUNTAJE_ADMISION": st.column_config.ProgressColumn("PUNTAJE_ADMISION",
+                                                                                        help="Puntaje obtenido por el estudiante en la prueba de admision",
+                                                                                        min_value=None,
+                                                                                        max_value=888.484,
+                                                                                        format="%f")},
+                     use_container_width=True,
+                     hide_index=True)
+
+    def RenameColumns(self, **args):
+        for column in args["columns"]:
+            rename = pd.read_csv(f"data/{column}.csv")
+            vars = rename.columns[1]
+            self.modr[column] = self.modr[column].map(
+                rename.set_index(column)[vars])
+
+    def CreateSlider(self,
+                     column: str,
+                     min_value: Union[int, float],
+                     max_value: Union[int, float],
+                     values: tuple,
+                     format: str,
+                     **args):
+        if args:
+            range = st.slider(column,
+                              min_value=min_value,
+                              max_value=max_value,
+                              format=format,
+                              value=values,
+                              step=args["step"])
+            if range[0] == 0:
+                self.modr = self.modr
             else:
-                carr = self.cars[self.cars["PLAN"].isin(
-                    carr)]["COD_PLAN"].tolist()
-                self.modr[self.modr["COD_PLAN"].isin(carr)]
-        if "AVANCE_CARRERA" in BT:
-            st.dataframe(self.modr[BT], column_config={"AVANCE_CARRERA":  st.column_config.ProgressColumn(
-                "AVANCE_CARRERA", help="Avance de carrera actual del estudiante", min_value=0.0, max_value=100.0)}, disabled=BT, hide_index=True, use_container_width=True)
+                self.modr = self.modr[(self.modr[column] <=
+                                       range[1]) & (self.modr[column] >= range[0])]
+        else:
+            range = st.slider(column,
+                              min_value=min_value,
+                              max_value=max_value,
+                              format=format,
+                              value=values)
+            self.modr = self.modr[(self.modr[column] <=
+                                   range[1]) & (self.modr[column] >= range[0])]
+
+    def _CreateMultiSelect_WithDDF(self,
+                                   label: str,
+                                   column: str,
+                                   options: list,
+                                   df: pd.DataFrame):
+        Select = st.multiselect(label=label,
+                                options=options)
+        Select = df[df.iloc[:, 1].isin(Select)].iloc[:, 0].tolist()
+        self.modr = self.modr[self.modr[column].isin(Select)]
+
+    def _CreateMultiSelect_WithoutDDF(self,
+                                      label: str,
+                                      column: str,
+                                      options: list):
+        Select = st.multiselect(label=label,
+                                options=options)
+        self.modr = self.modr[self.modr[column].isin(Select)]
+
+    def _CreateMultiSelectModified(self,
+                                   label: str,
+                                   column: str,
+                                   options: list,
+                                   **args):
+        Select = st.multiselect(label=label,
+                                options=options)
+        if "SI" in Select and "NO" not in Select:
+            self.modr = self.modr[self.modr[column].isin(["SI"])]
+        elif "NO" in Select and "SI" not in Select:
+            self.modr = self.modr[self.modr[column].isin(["NO"])]
+        else:
+            self.modr = self.modr
+
+    def _CreateMultiselectWithNAN(self,
+                                  label: str,
+                                  column: str,
+                                  options: list):
+
+        Select = st.multiselect(label=label,
+                                options=options)
+        if not Select:
+            self.modr = self.modr
+        else:
+            self.modr = self.modr[self.modr[column].isin(Select)]
+
+    def CreateMultiSelect(self,
+                          label: str,
+                          column: str,
+                          options: list,
+                          fuction,
+                          **args):
+        if args:
+            fuction(label, column, options, **args)
+        else:
+            fuction(label, column, options)
 
     def show_conclusions(self):
         st.title("Conclusiones y Recomendaciones")
@@ -165,7 +494,8 @@ class dashboard():
         st.write("¡Nos encantaría conocer tu opinión! Ponte en contacto con nosotros para cualquier comentario o sugerencia.")
 
     def desc_var(self, var):
-        if var == "---":
+        des = ""
+        if var == "":
             des = """
             
             """
@@ -375,58 +705,79 @@ class dashboard():
             
             Estos códigos son utilizados para identificar de manera única el departamento de residencia de cada estudiante en la base de datos.
             """
-        elif var == "COD_MUN_RESIDENCIA":
+        elif var == "MUNICIPIO_RESIDENCIA":
             des = """
-            ### Descripción de la variable COD_MUN_RESIDENCIA
-            La variable COD_MUN_RESIDENCIA es un código entero que está relacionado con el municipio de residencia de cada estudiante. Este código identifica el municipio geográfico en el que reside el estudiante.
+            ### Descripción de la variable MUNICIPIO_RESIDENCIA
+            La variable MUNICIPIO_RESIDENCIA es una variable de tipo string que indica el nombre del municipio en el que reside el estudiante.
 
-            - **Tipo de datos**: Entero (int).
-            - **Rango de valores**: La variable COD_MUN_RESIDENCIA puede tomar valores específicos que corresponden a códigos numéricos asignados a cada municipio.
-            
-            Los códigos de municipio presentes en la base de datos, junto con sus correspondientes municipios, se enumeran a continuación:
+            - **Tipo de datos:** Cadena de caracteres (str).
+            - **Valores posibles:** Los valores de esta variable son los nombres de los municipios donde residen los estudiantes.
 
-            - Código 32: ASTREA
-            - Código 1: VALLEDUPAR
-            - Código 60: BOSCONIA
-            - Código 621: LA PAZ
-            - Código 570: PUEBLO BELLO
-            - Código 13: AGUSTÍN CODAZZI
-            - Código 874: VILLANUEVA
-            - Código 443: MANAURE BALCÓN DEL CESAR
-            - Código 750: SAN DIEGO
-            - Código 228: CURUMANÍ
-            - Código 650: SAN JUAN DEL CESAR
-            - Código 45: BECERRIL
-            - Código 855: URUMITA
-            - Código 250: EL PASO
-            - Código 770: SAN MARTÍN
-            - Código 400: LA JAGUA DE IBIRICO
-            - Código 175: CHIMICHAGUA
-            - Código 517: PAILITAS
-            - Código 420: LA JAGUA DEL PILAR
-            - Código 430: MAICAO
-            - Código 498: OCAÑA
-            - Código 170: CHIBOLO
+            Esta variable proporciona información importante sobre la ubicación geográfica de residencia de los estudiantes. El municipio de residencia puede influir en varios aspectos de la vida estudiantil, incluido el acceso a recursos locales, las condiciones socioeconómicas y las oportunidades educativas y comunitarias disponibles.
 
-            Estos códigos son utilizados para identificar de manera única el municipio de residencia de cada estudiante en la base de datos.
+            La consideración de esta variable puede ser relevante para comprender mejor el contexto socioeconómico y geográfico de los estudiantes, así como para diseñar políticas y programas de apoyo que aborden las necesidades específicas de diferentes comunidades y regiones.
             """
         elif var == "COD_PROVINCIA":
             des = """
             ### Descripción de la variable COD_PROVINCIA
+            La variable COD_PROVINCIA es un código numérico que representa el departamento de nacimiento del estudiante.
+
+            - **Tipo de datos:** Entero (int).
+            - **Valores posibles:** Los valores de esta variable son los códigos numéricos asociados a los departamentos de nacimiento del estudiante.
             
-            [Descripción detallada de la variable COD_PROVINCIA]
+            Los códigos numéricos están asociados a los siguientes departamentos, según el siguiente mapeo:
+
+            - Código 8: ATLÁNTICO
+            - Código 20: CESAR
+            - Código 47: MAGDALENA
+            - Código 11: BOGOTÁ, D.C.
+            - Código 54: NORTE DE SANTANDER
+            - Código 17: CALDAS
+            - Código 44: LA GUAJIRA
+            - Código 25: CUNDINAMARCA
+            - Código 13: BOLÍVAR
+            - Código 5: ANTIOQUIA
+            - Código 76: VALLE DEL CAUCA
+            - Código 68: SANTANDER
+            - Código 50: META
+            - Código 15: BOYACÁ
+            - Código 2: DPTO EXTRANJERO
+            - Código 70: SUCRE
+            - Código 23: CÓRDOBA
+            - Código 52: NARIÑO
+            - Código 19: CAUCA
+            - Código 73: TOLIMA
+
+            Esta variable proporciona información sobre el departamento de origen o nacimiento del estudiante, lo que puede ser relevante para análisis demográficos y estudios de migración y distribución geográfica de la población estudiantil.
             """
-        elif var == "COD_MINICIPIO":
+        elif var == "MUNICIPIO_NACIMIENTO":
             des = """
-            ### Descripción de la variable COD_MINICIPIO
+            ### Descripción de la variable MUNICIPIO_NACIMIENTO
+            La variable MUNICIPIO_NACIMIENTO es una variable de tipo string que indica el nombre del municipio en el que nació el estudiante.
+
+            - **Tipo de datos:** Cadena de caracteres (str).
+            - **Valores posibles:** Los valores de esta variable son los nombres de los municipios donde nacieron los estudiantes.
             
-            [Descripción detallada de la variable COD_MINICIPIO]
+            Esta variable proporciona información importante sobre el lugar de nacimiento de los estudiantes. El municipio de nacimiento puede influir en varios aspectos de la vida y el contexto socioeconómico de los estudiantes.
+
+            La consideración de esta variable puede ser relevante para comprender mejor la distribución geográfica y demográfica de la población estudiantil, así como para analizar posibles disparidades en la atención médica, los recursos educativos y otras condiciones sociales y ambientales que pueden variar según el lugar de nacimiento.
             """
         elif var == "COD_NACIONALIDAD":
             des = """
             ### Descripción de la variable COD_NACIONALIDAD
+            La variable COD_NACIONALIDAD es un código numérico que representa el país de nacionalidad del estudiante.
+
+            - **Tipo de datos:** Entero (int).
+            - **Valores posibles:** Los valores de esta variable son los códigos numéricos asociados a los países de nacionalidad del estudiante.
             
-            [Descripción detallada de la variable COD_NACIONALIDAD]
+            Los códigos numéricos están asociados a los siguientes países, según el siguiente mapeo:
+
+            - Código 170: COLOMBIA
+            - Código 862: VENEZUELA
+            - Código 532: ANTILLAS HOLANDESAS
+            - Código 999: DESCONOCIDA
+            
+            Esta variable proporciona información sobre la nacionalidad del estudiante, lo que puede ser relevante para análisis demográficos y estudios sobre la diversidad cultural y la migración de la población estudiantil.
             """
         elif var == "VICTIMAS_DEL_CONFLICTO":
             des = """
