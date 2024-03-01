@@ -546,7 +546,21 @@ class dashboard():
 
     def show_feedback(self):
         st.title("Feedback y Contacto")
-        st.write("¡Nos encantaría conocer tu opinión! Ponte en contacto con nosotros para cualquier comentario o sugerencia.")
+        st.header("Integrantes")
+        st.subheader("Wilhelm David Buitrago Garcia")
+        st.write("**Rol**: Programador, Lider y Analista")
+        st.write("**Responsabilidades**:  Desarrollar la lógica del sistema de filtros y graficas, gestionar la integración de datos, realizar análisis de datos y generar visualizaciones significativas.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
+
+        st.subheader("Sergio Andrés Guzmán Carrascal")
+        st.write("**Rol**: Programador y Documentador")
+        st.write("**Responsabilidades**:  Contribuyo a la lógica general de programación del proyecto. Además, me encargado de crear documentos sobre el proyecto.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
+
+        st.subheader("Hector Daniel Vasquez Rivera")
+        st.write("**Rol**: Programador, Tester y Analista")
+        st.write("**Responsabilidades**:  Diseñar la interfaz de usuario, del dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
 
     def desc_var(self, var):
         des = ""
