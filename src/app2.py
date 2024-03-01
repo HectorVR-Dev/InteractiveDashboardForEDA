@@ -71,13 +71,25 @@ class dashboard():
     def histogram(self, data):
         dataframe = pd.DataFrame(self.df[data])
         plot = sns.histplot(x=data, data=dataframe)
+        plot.set_xlabel(data)
+        plot.set_ylabel("Recuento")
         return plot
 
     def boxplot(self, varc, varn):
-        st.write(self.df[varc].iloc[:, 0])
-        label = self.df[varc].iloc[:, 0].tolist()
-        values = self.df[varn].iloc[:, 0].tolist()
+        label = self.df[[varc]].iloc[:, 0].tolist()
+        values = self.df[[varn]].iloc[:, 0].tolist()
         plot = sns.boxplot(x=label, y=values, data=self.df)
+        plot.set_xlabel(varc)
+        plot.set_ylabel(varn)
+        if varc == "MUNICIPIO_NACIMIENTO":
+            rotation = 90
+            fontsize = 4
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, fontsize=fontsize)
+        elif (varc == "MUNICIPIO_RESIDENCIA") or (varc == "CONVOCATORIA") or (varc == "APERTURA") or (varc == "DISCAPACIDAD"):
+            rotation = 45
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, horizontalalignment='right')
         plot = plt.gcf()
         return plot
 
@@ -103,12 +115,17 @@ class dashboard():
                                  rotation=rotation, horizontalalignment='right')
         else:
             plot.bar_label(plot.containers[0], fontsize=10)
+
+        plot.set_xlabel(data)
+        plot.set_ylabel("Recuento")
         return plot
 
     def scatter(self, var1, var2):
-        values1 = self.df[var1].iloc[:, 0].tolist()
-        values2 = self.df[var2].iloc[:, 0].tolist()
+        values1 = self.df[[var1]].iloc[:, 0].tolist()
+        values2 = self.df[[var2]].iloc[:, 0].tolist()
         plot = sns.scatterplot(x=values1, y=values2, data=self.df, hue=values2)
+        plot.set_xlabel(var1)
+        plot.set_ylabel(var2)
         return plot
 
     def est_desc(self):
@@ -171,7 +188,8 @@ class dashboard():
             if len(var) > 1:
                 st.pyplot(self.histogram(var).get_figure(),
                           use_container_width=True)
-                self.showdf(var)
+                with st.expander("Descripcion de variables", expanded=False):
+                    st.write(self.desc_var(var))
             else:
                 pass
         elif "BARRAS" in tpg:
@@ -183,26 +201,34 @@ class dashboard():
             else:
                 st.pyplot(self.barras(var).get_figure(),
                           use_container_width=True)
-                self.showdf(var)
+                with st.expander("Descripcion de variables", expanded=False):
+                    st.write(self.desc_var(var))
         elif "BOXPLOT" in tpg:
             col1, col2 = st.columns(2)
-            varc = col1.multiselect(
+            varc = col1.selectbox(
                 "Variable categorica", options=self.var_categoric)
-            varn = col2.multiselect("Variable numerica", options=[
+            varn = col2.selectbox("Variable numerica", options=[
                 ""]+self.var_numeric)
 
             if varc and varn:
                 st.pyplot(self.boxplot(varc, varn),
                           use_container_width=True)
+            with st.expander("Descripcion de variables", expanded=False):
+                st.write(self.desc_var(varc))
+                st.write(self.desc_var(varn))
+
         elif "PUNTOS" in tpg:
             col1, col2 = st.columns(2)
-            var1 = col1.multiselect(
+            var1 = col1.selectbox(
                 "Primera Variable", options=self.var_numeric)
-            var2 = col2.multiselect("Segunda Variable", options=[
-                                    ""]+self.var_numeric)
+            var2 = col2.selectbox("Segunda Variable", options=[
+                ""]+self.var_numeric)
             if var1 and var2:
                 st.pyplot(self.scatter(var1, var2).get_figure(),
                           use_container_width=True)
+                with st.expander("Descripcion de variables", expanded=False):
+                    st.write(self.desc_var(var1))
+                    st.write(self.desc_var(var2))
 
     def show_filters(self):
         self.modr = self.df
