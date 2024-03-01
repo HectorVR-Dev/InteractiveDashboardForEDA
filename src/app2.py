@@ -3,6 +3,10 @@ from PIL import Image
 import pandas as pd
 from typing import Union
 import matplotlib.pyplot as plt
+from bokeh.plotting import figure
+import seaborn as sns
+import numpy as np
+from math import pi
 
 
 class dashboard():
@@ -65,37 +69,38 @@ class dashboard():
             self.GragpsVar()
 
     def histogram(self, data):
-        data = self.df[data]
-        fig, histogram = plt.subplots()
-        histogram.hist(data)
-        return fig
+        dataframe = pd.DataFrame(self.df[data])
+        plot = sns.histplot(x=data, data=dataframe)
+        return plot
 
-    def boxplot(self, data):
-        fig, boxplotov = plt.subplots()
-        boxplotov.boxplot(data)
-        return fig
+    def boxplot(self, varc, varn):
+        label = self.df[varc].iloc[:, 0].tolist()
+        values = self.df[varn].iloc[:, 0].tolist()
+        plot = sns.boxplot(x=label, y=values)
+        return plot
 
-    def barras(self, data, **args):
-        count, _ = self.count(data)
+    def barras(self, data):
+        count = self.df[data].value_counts()
+        label = count.index.tolist()
+        values = count.values.tolist()
+
         if data[:3] == 'COD':
-            if data == "COD_PLAN":
-                label = count.iloc[:, 1]
-            else:
-                label = count.iloc[:, 1]
-                label = [str(int(lab)) for lab in label]
-            datav = count.iloc[:, 2].tolist()
+            label = [str(int(lab)) for lab in label]
+        plot = sns.barplot(x=label, y=values)
+
+        if data == "MUNICIPIO_NACIMIENTO":
+            rotation = 90
+            fontsize = 4
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, fontsize=fontsize)
+        elif (data == "MUNICIPIO_RESIDENCIA") or (data == "CONVOCATORIA") or (data == "APERTURA") or (data == "DISCAPACIDAD"):
+            rotation = 45
+            plot.bar_label(plot.containers[0], fontsize=8)
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, horizontalalignment='right')
         else:
-            label = count.index.tolist()
-            label = [str(lab) for lab in label]
-            datav = count.iloc[:, 0].tolist()
-        fig, barras = plt.subplots()
-        barras.bar(label, datav)
-        if args:
-            barras.tick_params(
-                axis='x', labelsize=args["labelsize"], rotation=90)
-            barras.set_xlabel(data)
-        plt.tight_layout()
-        return fig
+            plot.bar_label(plot.containers[0], fontsize=10)
+        return plot
 
     def est_desc(self):
         typeVar = st.selectbox("Tipo de Variable:", [
@@ -150,27 +155,36 @@ class dashboard():
 
     def GragpsVar(self):
         tpg = st.multiselect("Tipo de grafico", options=[
-                             "HISTOGRAMA", "BARRAS"], max_selections=1)
+                             "HISTOGRAMA", "BARRAS", "BOXPLOT"], max_selections=1)
         if "HISTOGRAMA" in tpg:
             var = st.selectbox("Variables permitidas",
                                options=[""]+self.var_numeric)
             if len(var) > 1:
-                st.pyplot(self.histogram(var))
+                st.pyplot(self.histogram(var).get_figure(),
+                          use_container_width=True)
                 self.showdf(var)
             else:
                 pass
         elif "BARRAS" in tpg:
             var = st.selectbox("Variables permitidas",
                                options=self.var_categoric)
+
             if len(var) < 1:
                 pass
-            elif "MUNICIPIO_NACIMIENTO" in var:
-                st.pyplot(self.barras(var, labelsize=4))
-                self.showdf(var)
-
             else:
-                st.pyplot(self.barras(var, labelsize=12))
+                st.pyplot(self.barras(var).get_figure(),
+                          use_container_width=True)
                 self.showdf(var)
+        elif "BOXPLOT" in tpg:
+            col1, col2 = st.columns(2)
+            varc = col1.multiselect(
+                "Variable categorica", options=self.var_categoric)
+            varn = col2.multiselect("Variable numerica", options=[
+                                    ""]+self.var_numeric)
+
+            if varc and varn:
+                st.pyplot(self.boxplot(varc, varn).get_figure,
+                          use_container_width=True)
 
     def show_filters(self):
         self.modr = self.df
