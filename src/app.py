@@ -3,7 +3,10 @@ from PIL import Image
 import pandas as pd
 from typing import Union
 import matplotlib.pyplot as plt
+# from bokeh.plotting import figure
+import seaborn as sns
 import numpy as np
+from math import pi
 
 
 class dashboard():
@@ -17,7 +20,7 @@ class dashboard():
                             'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'PUNTAJE_ADMISION']
         self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'ESTRATO', 'COD_DEPTO_RESIDENCIA', 'MUNICIPIO_RESIDENCIA', 'COD_PROVINCIA',
                               'MUNICIPIO_NACIMIENTO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
-
+        self.plt = plt
         st.sidebar.title("Navegación")
         self.page = st.sidebar.radio("", ["Inicio", "EDA and Visualización", "Filtros Interactivos",
                                      "Conclusiones y Recomendaciones", "Recursos Adicionales", "Feedback y Contacto"])
@@ -62,44 +65,45 @@ class dashboard():
                                                            "Graficacion de Variables"])
         if action == "Estadistica Descriptiva":
             self.est_desc()
-        if action == "Graficacion de Variables":
-            self.graficas()
+        elif action == "Graficacion de Variables":
+            self.GragpsVar()
 
-    def scatter_plot(self, x, y):
-        fig, ax = plt.subplots()
-        ax.scatter(x, y)
-        st.pyplot(fig)
+    def histogram(self, data):
+        dataframe = pd.DataFrame(self.df[data])
+        plot = sns.histplot(x=data, data=dataframe, color='#A31D31')
+        plt.gcf().set_facecolor('#F3F0F0')
+        return plot
 
-    def bar_plot(self, x):
-        arr = self.df[x].value_counts().plot(kind='bar')
-        fig, ax = plt.subplots(arr)
-        # ax.figure(figsize=(8, 6))
-        ax.xlabel(x)
-        ax.ylabel("Frecuencia")
-        ax.title(f"Gráfico de Barras para {x}")
-        st.pyplot(fig)
+    def boxplot(self, varc, varn):
+        label = self.df[varc].iloc[:, 0].tolist()
+        values = self.df[varn].iloc[:, 0].tolist()
+        plot = sns.boxplot(x=label, y=values, color='#A31D31')
+        plt.gcf().set_facecolor('#F3F0F0')
+        return plot
 
-    def graficas(self):
-        typeVar = st.selectbox("Tipo de Variable:", [
-            "", "Numerica", "Categorica"])
-        if typeVar == "Numerica":
-            variable_seleccionada = st.multiselect(
-                "Selecciona las variables numericas **(dos variables)**.", self.var_numeric)
-            if variable_seleccionada != [] and len(variable_seleccionada) == 2:
-                self.scatter_plot(
-                    variable_seleccionada[0], variable_seleccionada[1])
-            else:
-                st.write("Seleccione dos variables.")
+    def barras(self, data):
+        count = self.df[data].value_counts()
+        label = count.index.tolist()
+        values = count.values.tolist()
 
-        elif typeVar == "Categorica":
-            variable_seleccionada = st.selectbox(
-                "Selecciona las variable categorica:", self.var_categoric)
-            if variable_seleccionada != '':
-                arr = self.df[variable_seleccionada]
-                fig, ax = plt.subplots()
-                ax.hist(arr, bins=20)
-                fig.patch.set_facecolor("#F3F0F0")
-                st.pyplot(fig)
+        if data[:3] == 'COD':
+            label = [str(int(lab)) for lab in label]
+        plot = sns.barplot(x=label, y=values, color='#A31D31')
+
+        if data == "MUNICIPIO_NACIMIENTO":
+            rotation = 90
+            fontsize = 4
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, fontsize=fontsize)
+        elif (data == "MUNICIPIO_RESIDENCIA") or (data == "CONVOCATORIA") or (data == "APERTURA") or (data == "DISCAPACIDAD"):
+            rotation = 45
+            plot.bar_label(plot.containers[0], fontsize=8)
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, horizontalalignment='right')
+        else:
+            plot.bar_label(plot.containers[0], fontsize=10)
+        plt.gcf().set_facecolor('#F3F0F0')
+        return plot
 
     def est_desc(self):
         typeVar = st.selectbox("Tipo de Variable:", [
@@ -113,36 +117,75 @@ class dashboard():
         elif typeVar == "Categorica":
             variable_seleccionada = st.selectbox(
                 "Selecciona las variable categorica:", self.var_categoric)
+            if variable_seleccionada:
+                self.showdf(variable_seleccionada)
 
-            if variable_seleccionada in ['COD_MINICIPIO', 'MUNICIPIO_RESIDENCIA']:
-                t = pd.read_csv("data/listMunic.csv")
-                frecuencia = t[variable_seleccionada].value_counts()
-                porcentaje = t[variable_seleccionada].value_counts(
-                    normalize=True)*100
-                est_cat = pd.DataFrame(
-                    {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
-                st.dataframe(est_cat, use_container_width=True)
+    def showdf(self, var):
+        est_cat, index = self.count(
+            variable_seleccionada=var)
+        if index == "nh":
+            st.dataframe(est_cat, use_container_width=True)
+        else:
+            st.dataframe(est_cat, hide_index=True,
+                         use_container_width=True)
 
-            elif variable_seleccionada != '':
-                frecuencia = self.df[variable_seleccionada].value_counts()
-                porcentaje = self.df[variable_seleccionada].value_counts(
-                    normalize=True)*100
-                est_cat = pd.DataFrame(
-                    {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
-                if variable_seleccionada[:3] == 'COD':
-                    # if variable_seleccionada in :
-                    #    t = pd.read_csv('data/BetterData.csv')
-                    # else:
-                    t = pd.read_csv(
-                        f'data/{variable_seleccionada}.csv')
-                    est_cat = pd.merge(est_cat, t[[
-                        variable_seleccionada, t.columns[1]]], on=variable_seleccionada, how='right')
-                    est_cat = est_cat[[est_cat.columns[-1]] +
-                                      list(est_cat.columns[:-1])]
-                    st.dataframe(est_cat, hide_index=True,
-                                 use_container_width=True)
-                else:
-                    st.dataframe(est_cat, use_container_width=True)
+    def count(self, variable_seleccionada):
+        if variable_seleccionada in ['COD_MINICIPIO', 'MUNICIPIO_RESIDENCIA']:
+            t = pd.read_csv("data/listMunic.csv")
+            frecuencia = t[variable_seleccionada].value_counts()
+            porcentaje = t[variable_seleccionada].value_counts(
+                normalize=True)*100
+            est_cat = pd.DataFrame(
+                {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
+            return est_cat, "nh"
+
+        elif variable_seleccionada != '':
+            frecuencia = self.df[variable_seleccionada].value_counts()
+            porcentaje = self.df[variable_seleccionada].value_counts(
+                normalize=True)*100
+            est_cat = pd.DataFrame(
+                {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
+            if variable_seleccionada[:3] == 'COD':
+                t = pd.read_csv(
+                    f'data/{variable_seleccionada}.csv')
+                est_cat = pd.merge(est_cat, t[[
+                    variable_seleccionada, t.columns[1]]], on=variable_seleccionada, how='right')
+                est_cat = est_cat[[est_cat.columns[-1]] +
+                                  list(est_cat.columns[:-1])]
+                return est_cat, "h"
+            else:
+                return est_cat, "nh"
+
+    def GragpsVar(self):
+        tpg = st.selectbox("Tipo de grafico", options=[
+                           '', "HISTOGRAMA", "BARRAS", "BOXPLOT"])
+        if "HISTOGRAMA" in tpg:
+            var = st.selectbox("Variables permitidas",
+                               options=[""]+self.var_numeric)
+            if var != "":
+                st.pyplot(self.histogram(var).get_figure(),
+                          use_container_width=True)
+
+        elif "BARRAS" in tpg:
+            var = st.selectbox("Variables permitidas",
+                               options=self.var_categoric)
+
+            if len(var) < 1:
+                pass
+            else:
+                st.pyplot(self.barras(var).get_figure(),
+                          use_container_width=True)
+
+        elif "BOXPLOT" in tpg:
+            col1, col2 = st.columns(2)
+            varc = col1.multiselect(
+                "Variable categorica", options=self.var_categoric)
+            varn = col2.multiselect("Variable numerica", options=[
+                                    ""]+self.var_numeric)
+
+            if varc and varn:
+                st.pyplot(self.boxplot(varc, varn).get_figure,
+                          use_container_width=True)
 
     def show_filters(self):
         self.modr = self.df
