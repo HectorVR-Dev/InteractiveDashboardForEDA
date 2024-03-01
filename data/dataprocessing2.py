@@ -27,6 +27,12 @@ def convfloat(column, df):
     return df
 
 
+def convint(column, df):
+    k = [int(d) for d in df[column]]
+    df[column] = k
+    return df
+
+
 df = CompatData("COD_PLAN", "PLAN", df)
 df = CompatData("COD_ACCESO", "ACCESO", df)
 df = CompatData("COD_SUBACCESO", "SUBACCESO", df)
@@ -52,6 +58,7 @@ df = convfloat("PROME_ACADE", df)
 
 # Guardar dataset limpio
 df = df.apply(lambda x: x.fillna(0) if x.dtype.kind in 'biufc' else x)
+df = convint("NUMERO_MATRICULAS", df)
 df.to_csv('data/Estudiantes_clear.csv', index=False)
 Munic = df[["MUNICIPIO_NACIMIENTO", "MUNICIPIO_RESIDENCIA"]]
 Nacimiento = Munic['MUNICIPIO_NACIMIENTO'].unique()
