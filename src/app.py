@@ -3,10 +3,7 @@ from PIL import Image
 import pandas as pd
 from typing import Union
 import matplotlib.pyplot as plt
-# from bokeh.plotting import figure
 import seaborn as sns
-import numpy as np
-from math import pi
 
 
 class dashboard():
@@ -68,43 +65,6 @@ class dashboard():
         elif action == "Graficacion de Variables":
             self.GragpsVar()
 
-    def histogram(self, data):
-        dataframe = pd.DataFrame(self.df[data])
-        plot = sns.histplot(x=data, data=dataframe, color='#A31D31')
-        plt.gcf().set_facecolor('#F3F0F0')
-        return plot
-
-    def boxplot(self, varc, varn):
-        label = self.df[varc].iloc[:, 0].tolist()
-        values = self.df[varn].iloc[:, 0].tolist()
-        plot = sns.boxplot(x=label, y=values, color='#A31D31')
-        plt.gcf().set_facecolor('#F3F0F0')
-        return plot
-
-    def barras(self, data):
-        count = self.df[data].value_counts()
-        label = count.index.tolist()
-        values = count.values.tolist()
-
-        if data[:3] == 'COD':
-            label = [str(int(lab)) for lab in label]
-        plot = sns.barplot(x=label, y=values, color='#A31D31')
-
-        if data == "MUNICIPIO_NACIMIENTO":
-            rotation = 90
-            fontsize = 4
-            plot.set_xticklabels(plot.get_xticklabels(),
-                                 rotation=rotation, fontsize=fontsize)
-        elif (data == "MUNICIPIO_RESIDENCIA") or (data == "CONVOCATORIA") or (data == "APERTURA") or (data == "DISCAPACIDAD"):
-            rotation = 45
-            plot.bar_label(plot.containers[0], fontsize=8)
-            plot.set_xticklabels(plot.get_xticklabels(),
-                                 rotation=rotation, horizontalalignment='right')
-        else:
-            plot.bar_label(plot.containers[0], fontsize=10)
-        plt.gcf().set_facecolor('#F3F0F0')
-        return plot
-
     def est_desc(self):
         typeVar = st.selectbox("Tipo de Variable:", [
             "", "Numerica", "Categorica"])
@@ -158,14 +118,17 @@ class dashboard():
 
     def GragpsVar(self):
         tpg = st.selectbox("Tipo de grafico", options=[
-                           '', "HISTOGRAMA", "BARRAS", "BOXPLOT"])
+            "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
         if "HISTOGRAMA" in tpg:
             var = st.selectbox("Variables permitidas",
                                options=[""]+self.var_numeric)
-            if var != "":
+            if len(var) > 1:
                 st.pyplot(self.histogram(var).get_figure(),
                           use_container_width=True)
-
+                with st.expander("Descripcion de variables", expanded=False):
+                    st.write(self.desc_var(var))
+            else:
+                pass
         elif "BARRAS" in tpg:
             var = st.selectbox("Variables permitidas",
                                options=self.var_categoric)
@@ -175,17 +138,94 @@ class dashboard():
             else:
                 st.pyplot(self.barras(var).get_figure(),
                           use_container_width=True)
-
+                with st.expander("Descripcion de variables", expanded=False):
+                    st.write(self.desc_var(var))
         elif "BOXPLOT" in tpg:
             col1, col2 = st.columns(2)
-            varc = col1.multiselect(
+            varc = col1.selectbox(
                 "Variable categorica", options=self.var_categoric)
-            varn = col2.multiselect("Variable numerica", options=[
-                                    ""]+self.var_numeric)
+            varn = col2.selectbox("Variable numerica", options=[
+                ""]+self.var_numeric)
 
             if varc and varn:
-                st.pyplot(self.boxplot(varc, varn).get_figure,
+                st.pyplot(self.boxplot(varc, varn),
                           use_container_width=True)
+            with st.expander("Descripcion de variables", expanded=False):
+                st.write(self.desc_var(varc))
+                st.write(self.desc_var(varn))
+
+        elif "PUNTOS" in tpg:
+            col1, col2 = st.columns(2)
+            var1 = col1.selectbox(
+                "Primera Variable", options=self.var_numeric)
+            var2 = col2.selectbox("Segunda Variable", options=[
+                ""]+self.var_numeric)
+            if var1 and var2:
+                st.pyplot(self.scatter(var1, var2).get_figure(),
+                          use_container_width=True)
+                with st.expander("Descripcion de variables", expanded=False):
+                    st.write(self.desc_var(var1))
+                    st.write(self.desc_var(var2))
+
+    def histogram(self, data):
+        dataframe = pd.DataFrame(self.df[data])
+        plot = sns.histplot(x=data, data=dataframe)
+        plot.set_xlabel(data)
+        plot.set_ylabel("Recuento")
+        return plot
+
+    def boxplot(self, varc, varn):
+        label = self.df[[varc]].iloc[:, 0].tolist()
+        values = self.df[[varn]].iloc[:, 0].tolist()
+        plot = sns.boxplot(x=label, y=values, data=self.df)
+        plot.set_xlabel(varc)
+        plot.set_ylabel(varn)
+        if varc == "MUNICIPIO_NACIMIENTO":
+            rotation = 90
+            fontsize = 4
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, fontsize=fontsize)
+        elif (varc == "MUNICIPIO_RESIDENCIA") or (varc == "CONVOCATORIA") or (varc == "APERTURA") or (varc == "DISCAPACIDAD"):
+            rotation = 45
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, horizontalalignment='right')
+        plot = plt.gcf()
+        return plot
+
+    def barras(self, data):
+        count = self.df[data].value_counts()
+        label = count.index.tolist()
+        values = count.values.tolist()
+
+        if data[:3] == 'COD':
+            if data != "COD_PLAN":
+                label = [str(int(lab)) for lab in label]
+        plot = sns.barplot(x=label, y=values)
+
+        if data == "MUNICIPIO_NACIMIENTO":
+            rotation = 90
+            fontsize = 4
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, fontsize=fontsize)
+        elif (data == "MUNICIPIO_RESIDENCIA") or (data == "CONVOCATORIA") or (data == "APERTURA") or (data == "DISCAPACIDAD"):
+            rotation = 45
+            plot.bar_label(plot.containers[0], fontsize=8)
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, horizontalalignment='right')
+        else:
+            plot.bar_label(plot.containers[0], fontsize=10)
+
+        plot.set_xlabel(data)
+        plot.set_ylabel("Recuento")
+        return plot
+
+    def scatter(self, var1, var2):
+        values1 = self.df[[var1]].iloc[:, 0].tolist()
+        values2 = self.df[[var2]].iloc[:, 0].tolist()
+        plot = sns.scatterplot(x=values1, y=values2, data=self.df, hue=values2)
+        plot.set_xlabel(var1)
+        plot.set_ylabel(var2)
+        return plot
 
     def show_filters(self):
         self.modr = self.df
@@ -506,7 +546,21 @@ class dashboard():
 
     def show_feedback(self):
         st.title("Feedback y Contacto")
-        st.write("¡Nos encantaría conocer tu opinión! Ponte en contacto con nosotros para cualquier comentario o sugerencia.")
+        st.header("Integrantes")
+        st.subheader("Wilhelm David Buitrago Garcia")
+        st.write("**Rol**: Programador, Lider y Analista")
+        st.write("**Responsabilidades**:  Desarrollar la lógica del sistema de filtros y graficas, gestionar la integración de datos, realizar análisis de datos y generar visualizaciones significativas.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
+
+        st.subheader("Sergio Andrés Guzmán Carrascal")
+        st.write("**Rol**: Programador y Documentador")
+        st.write("**Responsabilidades**:  Contribuyo a la lógica general de programación del proyecto. Además, me encargado de crear documentos sobre el proyecto.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
+
+        st.subheader("Hector Daniel Vasquez Rivera")
+        st.write("**Rol**: Programador, Tester y Analista")
+        st.write("**Responsabilidades**:  Diseñar la interfaz de usuario, del dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
 
     def desc_var(self, var):
         des = ""
