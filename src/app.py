@@ -161,8 +161,8 @@ class dashboard():
         # desea utilizar en la visualización. Dependiendo del tipo de gráfico seleccionado, se muestran opciones específicas
         # para seleccionar las variables y se generan los gráficos correspondientes. Aquí está un resumen de lo que hace cada
         # sección del código:
-        tpg = st.selectbox("Tipo de grafico", options=[
-            "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
+        tpg = st.selectbox("Tipo de grafico", options=["",
+                                                       "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
 
         if "HISTOGRAMA" in tpg:
             # Permite al usuario seleccionar una variable numérica y genera un histograma correspondiente.
@@ -211,7 +211,7 @@ class dashboard():
             # También proporciona una descripción de ambas variables seleccionadas.
             col1, col2 = st.columns(2)
             var1 = col1.selectbox(
-                "Primera Variable", options=self.var_numeric)
+                "Primera Variable", options=[""]+self.var_numeric)
             var2 = col2.selectbox("Segunda Variable", options=[
                 ""]+self.var_numeric)
             if var1 and var2:
