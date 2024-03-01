@@ -661,6 +661,7 @@ class dashboard():
         st.write("Explora los recursos adicionales relacionados con el análisis de datos y las tecnologías utilizadas en este proyecto.")
         st.info(
             '[GitHub](https://github.com/HectorVR-Dev/InteractiveDashboardForEDA.git)', icon="⭐")
+        st.info('[StreamLit](https://streamlit.io/)', icon="ℹ️")
 
     def show_feedback(self):
         st.title("Feedback y Contacto")
