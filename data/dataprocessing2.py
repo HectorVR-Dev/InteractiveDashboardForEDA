@@ -58,6 +58,8 @@ df = convfloat("PROME_ACADE", df)
 
 # Guardar dataset limpio
 df = df.apply(lambda x: x.fillna(0) if x.dtype.kind in 'biufc' else x)
+df['PUNTAJE_ADMISION'] = df['PUNTAJE_ADMISION'].replace({0.0: np.nan})
+
 df = convint("NUMERO_MATRICULAS", df)
 df.to_csv('data/Estudiantes_clear.csv', index=False)
 Munic = df[["MUNICIPIO_NACIMIENTO", "MUNICIPIO_RESIDENCIA"]]

@@ -140,9 +140,15 @@ class dashboard():
             return est_cat, False
 
         elif variable_seleccionada != '':
-            frecuencia = self.df[variable_seleccionada].value_counts()
-            porcentaje = self.df[variable_seleccionada].value_counts(
-                normalize=True)*100
+            if variable_seleccionada == "PUNTAJE_ADMISION":
+                frecuencia = self.df[variable_seleccionada].value_counts()
+                porcentaje = self.df[variable_seleccionada].value_counts(
+                    normalize=True)*100
+            else:
+                frecuencia = self.df[variable_seleccionada].value_counts()
+                porcentaje = self.df[variable_seleccionada].value_counts(
+                    normalize=True)*100
+
             est_cat = pd.DataFrame(
                 {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
             if variable_seleccionada[:3] == 'COD':
@@ -512,7 +518,8 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.CNACIONALIDAD)
         if BT:
-            st.write(f"Se han encontrado {len(self.modr)}  elementos para los filtros aplicados")
+            st.write(f"Se han encontrado {
+                     len(self.modr)}  elementos para los filtros aplicados 13")
         self.RenameColumns(
             columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
 
