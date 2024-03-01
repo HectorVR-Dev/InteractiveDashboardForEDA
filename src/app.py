@@ -222,16 +222,25 @@ class dashboard():
                     st.write(self.desc_var(var2))
 
     def histogram(self, data):
+        # La función histogram() recibe un nombre de columna de datos y genera un histograma correspondiente utilizando la biblioteca Seaborn.
+        # Se crea un DataFrame con la columna de datos seleccionada y se utiliza seaborn para trazar el histograma. Se establecen etiquetas
+        # adecuadas para los ejes x e y del histograma. Finalmente, se devuelve el objeto del histograma.
         dataframe = pd.DataFrame(self.df[data])
-        plot = sns.histplot(x=data, data=dataframe)
+        plot = sns.histplot(x=data, data=dataframe, color="#A31D31")
         plot.set_xlabel(data)
         plot.set_ylabel("Recuento")
+        plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
     def boxplot(self, varc, varn):
+        # La función boxplot() recibe los nombres de una variable categórica y una variable numérica, y genera un diagrama de caja correspondiente
+        # utilizando Seaborn. Se extraen los valores de ambas variables del DataFrame principal y se crea el diagrama de caja con Seaborn, especificando
+        # la variable categórica en el eje x y la variable numérica en el eje y. Se establecen etiquetas adecuadas para los ejes x e y del diagrama,
+        # y se aplican ajustes adicionales al formato de las etiquetas del eje x en función de ciertas variables categóricas específicas. Finalmente,
+        # se devuelve el objeto del diagrama de caja.
         label = self.df[[varc]].iloc[:, 0].tolist()
         values = self.df[[varn]].iloc[:, 0].tolist()
-        plot = sns.boxplot(x=label, y=values, data=self.df)
+        plot = sns.boxplot(x=label, y=values, data=self.df, color="#A31D31")
         plot.set_xlabel(varc)
         plot.set_ylabel(varn)
         if varc == "MUNICIPIO_NACIMIENTO":
@@ -244,9 +253,16 @@ class dashboard():
             plot.set_xticklabels(plot.get_xticklabels(),
                                  rotation=rotation, horizontalalignment='right')
         plot = plt.gcf()
+        plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
     def barras(self, data):
+        # toma el nombre de una variable categórica y produce un gráfico de barras correspondiente utilizando Seaborn.
+        # Calcula la frecuencia de cada categoría en la variable seleccionada y ordena las etiquetas si la variable es
+        # del tipo 'COD'. Luego, crea el gráfico de barras con Seaborn, estableciendo las etiquetas en el eje x y los
+        # valores en el eje y. Ajusta el formato de las etiquetas del eje x según ciertas variables categóricas específicas
+        # y añade etiquetas a las barras si corresponde. Finalmente, establece las etiquetas adecuadas para los ejes x e y y
+        # devuelve el objeto del gráfico de barras generado.
         count = self.df[data].value_counts()
         if (data == "APERTURA") or (data == "CONVOCATORIA"):
             count = count.sort_index(ascending=True)
@@ -256,7 +272,7 @@ class dashboard():
         if data[:3] == 'COD':
             if data != "COD_PLAN":
                 label = [str(int(lab)) for lab in label]
-        plot = sns.barplot(x=label, y=values)
+        plot = sns.barplot(x=label, y=values, color="#A31D31")
 
         if data == "MUNICIPIO_NACIMIENTO":
             rotation = 90
@@ -273,17 +289,31 @@ class dashboard():
 
         plot.set_xlabel(data)
         plot.set_ylabel("Recuento")
+        plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
     def scatter(self, var1, var2):
+        # toma los nombres de dos variables numéricas y genera un gráfico de dispersión correspondiente utilizando Seaborn.
+        # Extrae los valores de ambas variables del DataFrame principal, y luego crea el gráfico de dispersión con Seaborn,
+        # especificando la primera variable en el eje x y la segunda variable en el eje y. Además, utiliza el valor de la
+        # segunda variable para codificar el color de los puntos en el gráfico. Se establecen etiquetas adecuadas para los
+        # ejes x e y, y finalmente se devuelve el objeto del gráfico de dispersión generado.
+
         values1 = self.df[[var1]].iloc[:, 0].tolist()
         values2 = self.df[[var2]].iloc[:, 0].tolist()
         plot = sns.scatterplot(x=values1, y=values2, data=self.df, hue=values2)
         plot.set_xlabel(var1)
         plot.set_ylabel(var2)
+        plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
     def show_filters(self):
+        # se encarga de mostrar filtros interactivos para personalizar el análisis de datos en la sección correspondiente de la aplicación.
+        # Utiliza los elementos seleccionados por el usuario para filtrar el DataFrame principal y luego muestra los resultados en una tabla.
+        # Se implementan varios tipos de filtros como selección múltiple, deslizadores para rangos numéricos y casillas de verificación.
+        # La función también realiza ciertas transformaciones en los datos, como renombrar columnas y ajustar la visualización de ciertas
+        # variables. Finalmente, muestra el DataFrame filtrado en una tabla con algunas columnas especiales configuradas para una mejor
+        # visualización.
         self.modr = self.df
         st.title("Filtros Interactivos")
         st.write(
@@ -502,6 +532,12 @@ class dashboard():
                      hide_index=True)
 
     def RenameColumns(self, **args):
+        # se encarga de renombrar las columnas del DataFrame según los datos proporcionados en archivos CSV específicos.
+        # Recibe como argumento un diccionario donde las claves son los nombres de las columnas que se desean renombrar
+        # y los valores son los nombres de los archivos CSV que contienen los datos de renombramiento. Itera sobre cada
+        # par clave-valor y carga el archivo CSV correspondiente. Luego, mapea los valores de la columna del DataFrame
+        # original a los valores de renombramiento utilizando la columna relevante del archivo CSV como índice. Esto
+        # actualiza el DataFrame con las nuevas etiquetas de columna.
         for column in args["columns"]:
             rename = pd.read_csv(f"data/{column}.csv")
             vars = rename.columns[1]
@@ -515,6 +551,10 @@ class dashboard():
                      values: tuple,
                      format: str,
                      **args):
+        # genera un widget interactivo de barra deslizante que permite al usuario seleccionar un rango de valores para una columna específica
+        # del DataFrame. Con argumentos como el nombre de la columna, los valores mínimo y máximo, el formato de visualización y opciones
+        # adicionales como el paso del slider, la función actualiza el DataFrame modr para incluir solo las filas que caen dentro del rango
+        # seleccionado por el usuario en la columna especificada.
         if args:
             range = st.slider(column,
                               min_value=min_value,
