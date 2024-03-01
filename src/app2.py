@@ -74,9 +74,11 @@ class dashboard():
         return plot
 
     def boxplot(self, varc, varn):
+        st.write(self.df[varc].iloc[:, 0])
         label = self.df[varc].iloc[:, 0].tolist()
         values = self.df[varn].iloc[:, 0].tolist()
-        plot = sns.boxplot(x=label, y=values)
+        plot = sns.boxplot(x=label, y=values, data=self.df)
+        plot = plt.gcf()
         return plot
 
     def barras(self, data):
@@ -85,7 +87,8 @@ class dashboard():
         values = count.values.tolist()
 
         if data[:3] == 'COD':
-            label = [str(int(lab)) for lab in label]
+            if data != "COD_PLAN":
+                label = [str(int(lab)) for lab in label]
         plot = sns.barplot(x=label, y=values)
 
         if data == "MUNICIPIO_NACIMIENTO":
@@ -100,6 +103,12 @@ class dashboard():
                                  rotation=rotation, horizontalalignment='right')
         else:
             plot.bar_label(plot.containers[0], fontsize=10)
+        return plot
+
+    def scatter(self, var1, var2):
+        values1 = self.df[var1].iloc[:, 0].tolist()
+        values2 = self.df[var2].iloc[:, 0].tolist()
+        plot = sns.scatterplot(x=values1, y=values2, data=self.df, hue=values2)
         return plot
 
     def est_desc(self):
@@ -154,8 +163,8 @@ class dashboard():
                 return est_cat, "nh"
 
     def GragpsVar(self):
-        tpg = st.multiselect("Tipo de grafico", options=[
-                             "HISTOGRAMA", "BARRAS", "BOXPLOT"], max_selections=1)
+        tpg = st.selectbox("Tipo de grafico", options=[
+            "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
         if "HISTOGRAMA" in tpg:
             var = st.selectbox("Variables permitidas",
                                options=[""]+self.var_numeric)
@@ -180,10 +189,19 @@ class dashboard():
             varc = col1.multiselect(
                 "Variable categorica", options=self.var_categoric)
             varn = col2.multiselect("Variable numerica", options=[
-                                    ""]+self.var_numeric)
+                ""]+self.var_numeric)
 
             if varc and varn:
-                st.pyplot(self.boxplot(varc, varn).get_figure,
+                st.pyplot(self.boxplot(varc, varn),
+                          use_container_width=True)
+        elif "PUNTOS" in tpg:
+            col1, col2 = st.columns(2)
+            var1 = col1.multiselect(
+                "Primera Variable", options=self.var_numeric)
+            var2 = col2.multiselect("Segunda Variable", options=[
+                                    ""]+self.var_numeric)
+            if var1 and var2:
+                st.pyplot(self.scatter(var1, var2).get_figure(),
                           use_container_width=True)
 
     def show_filters(self):
