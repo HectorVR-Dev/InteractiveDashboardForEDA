@@ -14,7 +14,7 @@ class dashboard():
         # y categóricas, se crea un menú de navegación en la barra lateral y se asignan las funciones
         # de visualización correspondientes a cada página. Finalmente, se muestra la página inicial de la aplicación.
 
-        self.df = pd.read_csv("data/Estudiantes_clear2.csv")
+        self.df = pd.read_csv("data/Estudiantes_clear.csv")
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
