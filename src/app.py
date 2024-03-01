@@ -15,6 +15,7 @@ class dashboard():
         # de visualización correspondientes a cada página. Finalmente, se muestra la página inicial de la aplicación.
 
         self.df = pd.read_csv("data/Estudiantes_clear.csv")
+        self.df["NUMERO_MATRICULAS"] = pd.DataFrame([0 if data==None else data for data in self.df["NUMERO_MATRICULAS"]])
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
@@ -425,8 +426,8 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithoutDDF)
 
             if "NUMERO_MATRICULAS" in BT:
-                min = int(self.df["NUMERO_MATRICULAS"].min() - 1)
-                max = int(self.df["NUMERO_MATRICULAS"].max())
+                min =  self.df["NUMERO_MATRICULAS"].min()
+                max =  self.df["NUMERO_MATRICULAS"].max()
                 self.CreateSlider(column="NUMERO_MATRICULAS",
                                   min_value=min,
                                   max_value=max,
