@@ -570,7 +570,7 @@ class dashboard():
         st.title("Feedback y Contacto")
         st.header("Integrantes")
         st.subheader("Wilhelm David Buitrago Garcia")
-        st.write("**Rol**: Programador, Lider y Analista")
+        st.write("**Rol**: Programador, Analista, Colider")
         st.write("**Responsabilidades**:  Desarrollar la lógica del sistema de filtros y graficas, gestionar la integración de datos, realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
 
@@ -580,7 +580,7 @@ class dashboard():
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
 
         st.subheader("Hector Daniel Vasquez Rivera")
-        st.write("**Rol**: Programador, Tester y Analista")
+        st.write("**Rol**: Programador, Tester, Analista y Lider")
         st.write("**Responsabilidades**:  Diseñar la interfaz de usuario, del dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
         st.markdown(
