@@ -15,7 +15,6 @@ class dashboard():
         # de visualización correspondientes a cada página. Finalmente, se muestra la página inicial de la aplicación.
 
         self.df = pd.read_csv("data/Estudiantes_clear.csv")
-        self.df["NUMERO_MATRICULAS"] = pd.DataFrame([0 if data==None else data for data in self.df["NUMERO_MATRICULAS"]])
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
@@ -426,8 +425,8 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithoutDDF)
 
             if "NUMERO_MATRICULAS" in BT:
-                min =  self.df["NUMERO_MATRICULAS"].min()
-                max =  self.df["NUMERO_MATRICULAS"].max()
+                min = int(self.df["NUMERO_MATRICULAS"].min())
+                max = int(self.df["NUMERO_MATRICULAS"].max())
                 self.CreateSlider(column="NUMERO_MATRICULAS",
                                   min_value=min,
                                   max_value=max,
@@ -513,7 +512,8 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.CNACIONALIDAD)
         if BT:
-            st.write(f"Se han encontrado {len(self.modr)}  elementos para los filtros aplicados")
+            st.write(f"Se han encontrado {
+                     len(self.modr)}  elementos para los filtros aplicados")
         self.RenameColumns(
             columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
 
@@ -691,14 +691,14 @@ class dashboard():
         # Para cada integrante, se presenta su nombre, rol, responsabilidades, afiliación universitaria y dirección de correo electrónico.
         st.title("Feedback y Contacto")
         st.header("Integrantes")
-        
+
         st.subheader("Hector Daniel Vasquez Rivera")
         st.write("**Rol**: Programador, Tester, Analista y Lider")
         st.write("**Responsabilidades**:  Diseñar la interfaz de usuario, del dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
         st.write(
             "**Contacto** :email:: [hevasquezr@unal.edu.co](mailto:hevasquezr@unal.edu.co)")
-        
+
         st.subheader("Wilhelm David Buitrago Garcia")
         st.write("**Rol**: Programador, Analista, Colider")
         st.write("**Responsabilidades**:  Desarrollar la lógica del sistema de filtros y graficas, gestionar la integración de datos, realizar análisis de datos y generar visualizaciones significativas.")

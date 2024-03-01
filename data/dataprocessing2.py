@@ -51,10 +51,12 @@ df = convfloat("AVANCE_CARRERA", df)
 df = convfloat("PROME_ACADE", df)
 
 # Guardar dataset limpio
-df.to_csv('data/Estudiantes_clear2.csv', index=False)
+df = df.apply(lambda x: x.fillna(0) if x.dtype.kind in 'biufc' else x)
+df.to_csv('data/Estudiantes_clear.csv', index=False)
 Munic = df[["MUNICIPIO_NACIMIENTO", "MUNICIPIO_RESIDENCIA"]]
 Nacimiento = Munic['MUNICIPIO_NACIMIENTO'].unique()
 Residencia = Munic['MUNICIPIO_RESIDENCIA'].unique()
+
 print('Residencia:', Residencia)
 print('Nacimiento:', Nacimiento)
 # Munic.to_csv("data/listMunic.csv")
