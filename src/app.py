@@ -512,8 +512,7 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.CNACIONALIDAD)
         if BT:
-            st.write(f"Se han encontrado {
-                len(self.modr)}  elementos para los filtros aplicados")
+            st.write(f"Se han encontrado {len(self.modr)}  elementos para los filtros aplicados")
         self.RenameColumns(
             columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
 
