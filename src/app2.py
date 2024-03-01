@@ -3,10 +3,7 @@ from PIL import Image
 import pandas as pd
 from typing import Union
 import matplotlib.pyplot as plt
-from bokeh.plotting import figure
 import seaborn as sns
-import numpy as np
-from math import pi
 
 
 class dashboard():
@@ -67,66 +64,6 @@ class dashboard():
             self.est_desc()
         elif action == "Graficacion de Variables":
             self.GragpsVar()
-
-    def histogram(self, data):
-        dataframe = pd.DataFrame(self.df[data])
-        plot = sns.histplot(x=data, data=dataframe)
-        plot.set_xlabel(data)
-        plot.set_ylabel("Recuento")
-        return plot
-
-    def boxplot(self, varc, varn):
-        label = self.df[[varc]].iloc[:, 0].tolist()
-        values = self.df[[varn]].iloc[:, 0].tolist()
-        plot = sns.boxplot(x=label, y=values, data=self.df)
-        plot.set_xlabel(varc)
-        plot.set_ylabel(varn)
-        if varc == "MUNICIPIO_NACIMIENTO":
-            rotation = 90
-            fontsize = 4
-            plot.set_xticklabels(plot.get_xticklabels(),
-                                 rotation=rotation, fontsize=fontsize)
-        elif (varc == "MUNICIPIO_RESIDENCIA") or (varc == "CONVOCATORIA") or (varc == "APERTURA") or (varc == "DISCAPACIDAD"):
-            rotation = 45
-            plot.set_xticklabels(plot.get_xticklabels(),
-                                 rotation=rotation, horizontalalignment='right')
-        plot = plt.gcf()
-        return plot
-
-    def barras(self, data):
-        count = self.df[data].value_counts()
-        label = count.index.tolist()
-        values = count.values.tolist()
-
-        if data[:3] == 'COD':
-            if data != "COD_PLAN":
-                label = [str(int(lab)) for lab in label]
-        plot = sns.barplot(x=label, y=values)
-
-        if data == "MUNICIPIO_NACIMIENTO":
-            rotation = 90
-            fontsize = 4
-            plot.set_xticklabels(plot.get_xticklabels(),
-                                 rotation=rotation, fontsize=fontsize)
-        elif (data == "MUNICIPIO_RESIDENCIA") or (data == "CONVOCATORIA") or (data == "APERTURA") or (data == "DISCAPACIDAD"):
-            rotation = 45
-            plot.bar_label(plot.containers[0], fontsize=8)
-            plot.set_xticklabels(plot.get_xticklabels(),
-                                 rotation=rotation, horizontalalignment='right')
-        else:
-            plot.bar_label(plot.containers[0], fontsize=10)
-
-        plot.set_xlabel(data)
-        plot.set_ylabel("Recuento")
-        return plot
-
-    def scatter(self, var1, var2):
-        values1 = self.df[[var1]].iloc[:, 0].tolist()
-        values2 = self.df[[var2]].iloc[:, 0].tolist()
-        plot = sns.scatterplot(x=values1, y=values2, data=self.df, hue=values2)
-        plot.set_xlabel(var1)
-        plot.set_ylabel(var2)
-        return plot
 
     def est_desc(self):
         typeVar = st.selectbox("Tipo de Variable:", [
@@ -229,6 +166,66 @@ class dashboard():
                 with st.expander("Descripcion de variables", expanded=False):
                     st.write(self.desc_var(var1))
                     st.write(self.desc_var(var2))
+
+    def histogram(self, data):
+        dataframe = pd.DataFrame(self.df[data])
+        plot = sns.histplot(x=data, data=dataframe)
+        plot.set_xlabel(data)
+        plot.set_ylabel("Recuento")
+        return plot
+
+    def boxplot(self, varc, varn):
+        label = self.df[[varc]].iloc[:, 0].tolist()
+        values = self.df[[varn]].iloc[:, 0].tolist()
+        plot = sns.boxplot(x=label, y=values, data=self.df)
+        plot.set_xlabel(varc)
+        plot.set_ylabel(varn)
+        if varc == "MUNICIPIO_NACIMIENTO":
+            rotation = 90
+            fontsize = 4
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, fontsize=fontsize)
+        elif (varc == "MUNICIPIO_RESIDENCIA") or (varc == "CONVOCATORIA") or (varc == "APERTURA") or (varc == "DISCAPACIDAD"):
+            rotation = 45
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, horizontalalignment='right')
+        plot = plt.gcf()
+        return plot
+
+    def barras(self, data):
+        count = self.df[data].value_counts()
+        label = count.index.tolist()
+        values = count.values.tolist()
+
+        if data[:3] == 'COD':
+            if data != "COD_PLAN":
+                label = [str(int(lab)) for lab in label]
+        plot = sns.barplot(x=label, y=values)
+
+        if data == "MUNICIPIO_NACIMIENTO":
+            rotation = 90
+            fontsize = 4
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, fontsize=fontsize)
+        elif (data == "MUNICIPIO_RESIDENCIA") or (data == "CONVOCATORIA") or (data == "APERTURA") or (data == "DISCAPACIDAD"):
+            rotation = 45
+            plot.bar_label(plot.containers[0], fontsize=8)
+            plot.set_xticklabels(plot.get_xticklabels(),
+                                 rotation=rotation, horizontalalignment='right')
+        else:
+            plot.bar_label(plot.containers[0], fontsize=10)
+
+        plot.set_xlabel(data)
+        plot.set_ylabel("Recuento")
+        return plot
+
+    def scatter(self, var1, var2):
+        values1 = self.df[[var1]].iloc[:, 0].tolist()
+        values2 = self.df[[var2]].iloc[:, 0].tolist()
+        plot = sns.scatterplot(x=values1, y=values2, data=self.df, hue=values2)
+        plot.set_xlabel(var1)
+        plot.set_ylabel(var2)
+        return plot
 
     def show_filters(self):
         self.modr = self.df
