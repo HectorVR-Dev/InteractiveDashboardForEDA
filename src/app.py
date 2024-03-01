@@ -14,7 +14,7 @@ class dashboard():
         # y categóricas, se crea un menú de navegación en la barra lateral y se asignan las funciones
         # de visualización correspondientes a cada página. Finalmente, se muestra la página inicial de la aplicación.
 
-        self.df = pd.read_csv("data/Estudiantes_clear2.csv")
+        self.df = pd.read_csv("data/Estudiantes_clear.csv")
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
@@ -581,6 +581,12 @@ class dashboard():
                                    column: str,
                                    options: list,
                                    df: pd.DataFrame):
+        # crea un widget de selección múltiple que muestra las opciones proporcionadas en forma de lista desplegable.
+        # Cuando el usuario selecciona una o más opciones, la función actualiza el DataFrame modr para incluir solo las
+        # filas donde los valores de la columna especificada (column) coinciden con las opciones seleccionadas por el usuario.
+        # Utiliza un DataFrame auxiliar (df) para mapear las selecciones del usuario a los valores correspondientes de la
+        # columna especificada.
+
         Select = st.multiselect(label=label,
                                 options=options)
         Select = df[df.iloc[:, 1].isin(Select)].iloc[:, 0].tolist()
@@ -590,6 +596,10 @@ class dashboard():
                                       label: str,
                                       column: str,
                                       options: list):
+        # crea un widget de selección múltiple sin utilizar un DataFrame adicional. Muestra las opciones proporcionadas
+        # en una lista desplegable y permite al usuario seleccionar una o más opciones. Luego, la función actualiza el
+        # DataFrame modr para incluir solo las filas donde los valores de la columna especificada (column) coinciden con
+        # las opciones seleccionadas por el usuario.
         Select = st.multiselect(label=label,
                                 options=options)
         self.modr = self.modr[self.modr[column].isin(Select)]
@@ -599,6 +609,11 @@ class dashboard():
                                    column: str,
                                    options: list,
                                    **args):
+        # crea un widget de selección múltiple modificado para manejar una variable binaria específica. Permite al usuario seleccionar entre
+        # las opciones proporcionadas, y si se selecciona "SI" pero no "NO", filtra el DataFrame modr para incluir solo las filas donde la
+        # columna especificada (column) tenga el valor "SI". Del mismo modo, si se selecciona "NO" pero no "SI", filtra el DataFrame para
+        # incluir solo las filas donde la columna tenga el valor "NO". Si ambas opciones están seleccionadas o ninguna está seleccionada,
+        # no se realiza ningún filtrado y se mantiene el DataFrame original.
         Select = st.multiselect(label=label,
                                 options=options)
         if "SI" in Select and "NO" not in Select:
@@ -612,6 +627,10 @@ class dashboard():
                                   label: str,
                                   column: str,
                                   options: list):
+        # crea un widget de selección múltiple que permite al usuario seleccionar opciones de una lista proporcionada.
+        # Si no se selecciona ninguna opción, el DataFrame modr no se filtra y permanece sin cambios. Si se seleccionan
+        # opciones, el DataFrame se filtra para incluir solo las filas donde la columna especificada (column) tenga valores
+        # que coincidan con las opciones seleccionadas.
 
         Select = st.multiselect(label=label,
                                 options=options)
@@ -626,12 +645,14 @@ class dashboard():
                           options: list,
                           fuction,
                           **args):
+        # crea un widget de selección múltiple que permite al usuario seleccionar opciones de una lista proporcionada.
         if args:
             fuction(label, column, options, **args)
         else:
             fuction(label, column, options)
 
     def show_conclusions(self):
+        # presenta los hallazgos del análisis de datos en forma de una lista numerada con descripciones breves de cada hallazgo.
         st.title("Hallazgos del Análisis de Datos")
         st.write("""
         1. **Distribución de Género:**
@@ -657,6 +678,8 @@ class dashboard():
         """)
 
     def show_resources(self):
+        # muestra una sección titulada "Recursos Adicionales", donde se invita a explorar recursos relacionados
+        # con el análisis de datos y las tecnologías utilizadas en el proyecto.
         st.title("Recursos Adicionales")
         st.write("Explora los recursos adicionales relacionados con el análisis de datos y las tecnologías utilizadas en este proyecto.")
         st.info(
@@ -664,6 +687,8 @@ class dashboard():
         st.info('[StreamLit](https://streamlit.io/)', icon="ℹ️")
 
     def show_feedback(self):
+        # muestra una sección titulada "Feedback y Contacto", donde se enumeran los integrantes del equipo responsable del proyecto.
+        # Para cada integrante, se presenta su nombre, rol, responsabilidades, afiliación universitaria y dirección de correo electrónico.
         st.title("Feedback y Contacto")
         st.header("Integrantes")
         st.subheader("Wilhelm David Buitrago Garcia")
@@ -685,12 +710,10 @@ class dashboard():
         st.write("**Responsabilidades**:  Diseñar la interfaz de usuario, del dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
         st.write(
-            "**Contacto** :email:: [hectordaniel1112@gmail.com](mailto:hectordaniel1112@gmail.com)")
-
-    def contact(self):
-        return
+            "**Contacto** :email:: [hevasquezr@unal.edu.co](mailto:hevasquezr@unal.edu.co)")
 
     def desc_var(self, var):
+        # recibe como entrada el nombre de una variable var y devuelve una descripción correspondiente a esa variable.
         des = ""
         if var == "":
             des = """
@@ -1033,4 +1056,4 @@ class dashboard():
 
 
 if __name__ == "__main__":
-    dash = dashboard()
+    dashboard()
