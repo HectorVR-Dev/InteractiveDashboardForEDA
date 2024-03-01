@@ -8,12 +8,6 @@ import seaborn as sns
 
 class dashboard():
     def __init__(self):
-        # En esta función, se inicializan los atributos de la clase,
-        # se carga el archivo CSV de datos de estudiantes en un DataFrame, se configura la página
-        # de Streamlit con un título, un ícono y un diseño, se define la lista de variables numéricas
-        # y categóricas, se crea un menú de navegación en la barra lateral y se asignan las funciones
-        # de visualización correspondientes a cada página. Finalmente, se muestra la página inicial de la aplicación.
-
         self.df = pd.read_csv("data/Estudiantes_clear2.csv")
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
@@ -40,13 +34,6 @@ class dashboard():
         self.pages[self.page]()
 
     def show_home(self):
-
-        # muestra la página de inicio del dashboard. En esta página, se presenta una descripción general del propósito del
-        # dashboard y se proporciona información sobre la base de datos de los estudiantes de la Universidad Nacional de
-        # Colombia sede de la Paz. Se incluye una breve descripción de las características del dataset, como el número de
-        # estudiantes, el número de variables y la distribución de variables numéricas y categóricas. Además, se ofrece un
-        # selector de variables para que el usuario pueda explorar la descripción de cada variable seleccionada.
-
         st.title("Bienvenido al Dashboard de Análisis de Datos")
         st.markdown(
             """
@@ -66,13 +53,6 @@ class dashboard():
         st.markdown(self.desc_var(var))
 
     def show_eda(self):
-
-        # muestra la sección de Análisis Exploratorio de Datos (EDA, por sus siglas en inglés). En esta sección,
-        # se ofrece al usuario la posibilidad de explorar y analizar los datos de manera interactiva. Se presenta
-        # una breve introducción al EDA y se proporciona un selector de acciones que incluye opciones para realizar
-        # estadísticas descriptivas y graficar variables. Dependiendo de la acción seleccionada por el usuario, se
-        # llama a las funciones correspondientes para realizar la estadística descriptiva o la visualización de variables.
-
         st.markdown("""
             # **Análisis Exploratorio de Datos**
                  
@@ -86,13 +66,6 @@ class dashboard():
             self.GragpsVar()
 
     def est_desc(self):
-        # La función est_desc() permite al usuario realizar estadísticas descriptivas sobre las variables del conjunto de datos.
-        # Dependiendo del tipo de variable seleccionada (numérica o categórica), se presentan opciones diferentes:
-        # Si se selecciona una variable numérica, se muestra un selector múltiple para elegir una o más variables numéricas.
-        # Luego, se calculan y muestran las estadísticas descriptivas (como media, mediana, mínimo, máximo, etc.) para las
-        # variables seleccionadas.
-        # Si se selecciona una variable categórica, se muestra un selector para elegir una variable categórica.
-        # Posteriormente, se llama a la función showdf() para mostrar los datos de la variable categórica seleccionada.
         typeVar = st.selectbox("Tipo de Variable:", [
             "", "Numerica", "Categorica"])
         if typeVar == "Numerica":
@@ -108,13 +81,6 @@ class dashboard():
                 self.showdf(variable_seleccionada)
 
     def showdf(self, var):
-
-        # La función showdf() muestra los datos de una variable categórica seleccionada.
-        # Se utiliza la función count() para obtener el conteo de valores únicos de la
-        # variable categórica y se muestra el DataFrame resultante. Si el índice del
-        # DataFrame es "nh" (no ocultar índice), se muestra el DataFrame con el índice
-        # visible; de lo contrario, se oculta el índice del DataFrame.
-
         est_cat, index = self.count(
             variable_seleccionada=var)
         if index == False:
@@ -124,12 +90,6 @@ class dashboard():
                          use_container_width=True)
 
     def count(self, variable_seleccionada):
-        # La función count() calcula la frecuencia y el porcentaje de ocurrencia de los valores únicos de una variable
-        # categórica seleccionada. Si la variable seleccionada corresponde a ciertos nombres específicos, carga datos
-        # adicionales de un archivo CSV y combina la información con las frecuencias calculadas.
-        # Devuelve un DataFrame con las frecuencias y porcentajes, junto con una indicación
-        # sobre si se debe ocultar el índice del DataFrame al mostrar los resultados.
-
         if variable_seleccionada in ['COD_MINICIPIO', 'MUNICIPIO_RESIDENCIA']:
             t = pd.read_csv("data/listMunic.csv")
             frecuencia = t[variable_seleccionada].value_counts()
@@ -157,16 +117,9 @@ class dashboard():
                 return est_cat, False
 
     def GragpsVar(self):
-        # La función GragpsVar() permite al usuario seleccionar el tipo de gráfico que desea generar y las variables que
-        # desea utilizar en la visualización. Dependiendo del tipo de gráfico seleccionado, se muestran opciones específicas
-        # para seleccionar las variables y se generan los gráficos correspondientes. Aquí está un resumen de lo que hace cada
-        # sección del código:
         tpg = st.selectbox("Tipo de grafico", options=[
             "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
-
         if "HISTOGRAMA" in tpg:
-            # Permite al usuario seleccionar una variable numérica y genera un histograma correspondiente.
-            # También proporciona una descripción de la variable seleccionada.
             var = st.selectbox("Variables permitidas",
                                options=[""]+self.var_numeric)
             if len(var) > 1:
@@ -177,8 +130,6 @@ class dashboard():
             else:
                 pass
         elif "BARRAS" in tpg:
-            # Permite al usuario seleccionar una variable categórica y genera un gráfico de barras correspondiente.
-            # También proporciona una descripción de la variable seleccionada.
             var = st.selectbox("Variables permitidas",
                                options=self.var_categoric)
 
@@ -189,10 +140,7 @@ class dashboard():
                           use_container_width=True)
                 with st.expander("Descripcion de variables", expanded=False):
                     st.write(self.desc_var(var))
-
         elif "BOXPLOT" in tpg:
-            # Permite al usuario seleccionar una variable categórica y una variable numérica, y genera un diagrama de caja correspondiente.
-            # También proporciona una descripción de ambas variables seleccionadas.
             col1, col2 = st.columns(2)
             varc = col1.selectbox(
                 "Variable categorica", options=self.var_categoric)
@@ -207,8 +155,6 @@ class dashboard():
                 st.write(self.desc_var(varn))
 
         elif "PUNTOS" in tpg:
-            # Permite al usuario seleccionar dos variables numéricas y genera un gráfico de dispersión correspondiente.
-            # También proporciona una descripción de ambas variables seleccionadas.
             col1, col2 = st.columns(2)
             var1 = col1.selectbox(
                 "Primera Variable", options=self.var_numeric)
