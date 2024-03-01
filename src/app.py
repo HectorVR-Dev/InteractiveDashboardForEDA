@@ -194,6 +194,8 @@ class dashboard():
 
     def barras(self, data):
         count = self.df[data].value_counts()
+        if (data == "APERTURA") or (data == "CONVOCATORIA"):
+            count = count.sort_index(ascending=True)
         label = count.index.tolist()
         values = count.values.tolist()
 
@@ -561,6 +563,8 @@ class dashboard():
         st.write("**Rol**: Programador, Tester y Analista")
         st.write("**Responsabilidades**:  Diseñar la interfaz de usuario, del dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
+        st.markdown(
+            '<a href="mailto:hello@streamlit.io">Contact us !</a>', unsafe_allow_html=True)
 
     def desc_var(self, var):
         des = ""
