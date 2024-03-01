@@ -27,7 +27,7 @@ class dashboard():
         self.pages = {'Inicio': self.show_home,
                       'EDA and Visualización': self.show_eda,
                       'Filtros Interactivos': self.show_filters,
-                      'Conclusiones y Recomendaciones': self.show_conclusions,
+                      'Conclusiones': self.show_conclusions,
                       'Recursos Adicionales': self.show_resources,
                       'Feedback y Contacto': self.show_feedback}
 
