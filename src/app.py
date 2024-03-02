@@ -588,9 +588,9 @@ class dashboard():
                                                                                         format="%f")},
                      use_container_width=True,
                      hide_index=True)
-
-        st.write("**Visualización de variables**")
-        self.Select_Graficas(viz)
+        if len(self.modr) != 0:
+            st.write("**Visualización de variables**")
+            self.Select_Graficas(viz)
 
     def RenameColumns(self,
                       df: pd.DataFrame,
