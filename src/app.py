@@ -4,6 +4,7 @@ import pandas as pd
 from typing import Union
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 class dashboard():
@@ -19,6 +20,7 @@ class dashboard():
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
                            page_icon=icon, layout="wide")
+        self.nvarc, self.nvarn = self.describe()
         self.var_numeric = ['AVANCE_CARRERA', 'EDAD', 'NUMERO_MATRICULAS',
                             'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'PUNTAJE_ADMISION']
         self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'ESTRATO', 'COD_DEPTO_RESIDENCIA', 'MUNICIPIO_RESIDENCIA', 'COD_PROVINCIA',
@@ -48,22 +50,51 @@ class dashboard():
         # selector de variables para que el usuario pueda explorar la descripción de cada variable seleccionada.
 
         st.title("Bienvenido al Dashboard de Análisis de Datos")
-        st.markdown(
-            """
-        Este dashboard interactivo proporciona un espacio en la web para el análisis exploratorio de la base de datos de los estudiantes de la Universidad Nacional de Colombia sede de la Paz. Aquí puedes realizar visualizaciones interactivas, aplicar filtros a los datos, obtener conclusiones clave y acceder a recursos adicionales.
+        st.markdown(f"""
+        Este dashboard interactivo proporciona un espacio en la web para el análisis exploratorio de la base de datos de los estudiantes de la Universidad Nacional de Colombia, sede de la Paz. Aquí puedes realizar visualizaciones interactivas, aplicar filtros a los datos, obtener conclusiones clave y acceder a recursos adicionales.
 
-        ### Descripcion de base de datos (Dinara - Listado de estudiantes activos 2024-1)
-        El dataset depurado cuenta con las siguientes caracteristicas:
+        ### Descripción de la base de datos (Dinara - Listado de estudiantes activos 2024-1)
+        El dataset depurado cuenta con las siguientes características:
 
-        - Tiene **1321** estudiantes con **23** variables 
-        - **8** variables numericas
-        - **15** variables categoricas
+        - Tiene **{len(self.df)}** estudiantes con **{self.nvarn+self.nvarc}** variables.
+        - **{self.nvarn}** variables numéricas.
+        - **{self.nvarc}** variables categóricas.
 
-         A continuacion puede escoger cualquier variable para ver su respectiva descripcion:
+         A continuación, puede seleccionar cualquier variable para ver su respectiva descripción:
         """)
 
-        var = st.selectbox("Variable:", self.vars)
+        var = st.selectbox("**Variable:**", self.vars)
         st.markdown(self.desc_var(var))
+
+    def convfloat(self, column, df):
+        k = [np.float64(d.replace(',', '.')) if isinstance(
+            d, str) else d for d in df[column]]
+        k = ["" if pd.isna(d) else d for d in k]
+        df[column] = k
+        return df
+
+    def describe(self):
+        df = pd.read_csv('data\Estudiantes_dirty.csv')
+
+        df = df.drop(["SEDE", "COD_FACULTAD", "FACULTAD", "CONVENIO_PLAN",
+                      "COD_NIVEL", "NIVEL"], axis=1)
+
+        df = df.drop(["COD_PLAN", "COD_ACCESO", "COD_SUBACCESO", "COD_DEPTO_RESIDENCIA",
+                      "COD_MUN_RESIDENCIA", "COD_PROVINCIA", "COD_MINICIPIO", "COD_NACIONALIDAD"], axis=1)
+
+        df = self.convfloat("PAPA", df)
+        df = self.convfloat("AVANCE_CARRERA", df)
+        df = self.convfloat("PROME_ACADE", df)
+
+        categorical = []
+        numerical = []
+        print(df.loc[46, :])
+        for x in df.loc[46, :]:
+            if isinstance(x, str):
+                categorical.append(x)
+            else:
+                numerical.append(x)
+        return len(categorical), len(numerical)
 
     def show_eda(self):
 
@@ -78,11 +109,11 @@ class dashboard():
                  
             En esta sección, puedes explorar y analizar los datos de manera interactiva.
             """)
-        action = st.selectbox("## **Que deseas hacer:**", ["", "Estadistica Descriptiva",
-                                                           "Graficacion de Variables"])
-        if action == "Estadistica Descriptiva":
+        action = st.selectbox("## **Que deseas hacer:**", ["", "Estadística Descriptiva",
+                                                           "Visualización de Variables"])
+        if action == "Estadística Descriptiva":
             self.est_desc()
-        elif action == "Graficacion de Variables":
+        elif action == "Visualización de Variables":
             self.GragpsVar()
 
     def est_desc(self):
@@ -93,17 +124,17 @@ class dashboard():
         # variables seleccionadas.
         # Si se selecciona una variable categórica, se muestra un selector para elegir una variable categórica.
         # Posteriormente, se llama a la función showdf() para mostrar los datos de la variable categórica seleccionada.
-        typeVar = st.selectbox("Tipo de Variable:", [
-            "", "Numerica", "Categorica"])
-        if typeVar == "Numerica":
+        typeVar = st.selectbox("**Tipo de Variable:**", [
+            "", "Numérica", "Categórica"])
+        if typeVar == "Numérica":
             variable_seleccionada = st.multiselect(
-                "Selecciona las variables numericas **(Una o Mas)**.", self.var_numeric)
+                "Selecciona las variables numéricas **(Una o Mas)**.", self.var_numeric)
             if variable_seleccionada != []:
                 estadisticas = self.df[variable_seleccionada].describe()
                 st.dataframe(estadisticas, use_container_width=True)
-        elif typeVar == "Categorica":
+        elif typeVar == "Categórica":
             variable_seleccionada = st.selectbox(
-                "Selecciona las variable categorica:", self.var_categoric)
+                "**Selecciona las variable categórica:**", self.var_categoric)
             if variable_seleccionada:
                 self.showdf(variable_seleccionada)
 
@@ -167,25 +198,25 @@ class dashboard():
         # desea utilizar en la visualización. Dependiendo del tipo de gráfico seleccionado, se muestran opciones específicas
         # para seleccionar las variables y se generan los gráficos correspondientes. Aquí está un resumen de lo que hace cada
         # sección del código:
-        tpg = st.selectbox("Tipo de grafico", options=["",
-                                                       "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
+        tpg = st.selectbox("**Tipo de grafico:**", options=["",
+                                                            "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
 
         if "HISTOGRAMA" in tpg:
             # Permite al usuario seleccionar una variable numérica y genera un histograma correspondiente.
             # También proporciona una descripción de la variable seleccionada.
-            var = st.selectbox("Variables permitidas",
+            var = st.selectbox("**Variables permitidas:**",
                                options=[""]+self.var_numeric)
             if len(var) > 1:
                 st.pyplot(self.histogram(var).get_figure(),
                           use_container_width=True)
-                with st.expander("Descripcion de variables", expanded=False):
+                with st.expander("**Descripción de variables**", expanded=False):
                     st.write(self.desc_var(var))
             else:
                 pass
         elif "BARRAS" in tpg:
             # Permite al usuario seleccionar una variable categórica y genera un gráfico de barras correspondiente.
             # También proporciona una descripción de la variable seleccionada.
-            var = st.selectbox("Variables permitidas",
+            var = st.selectbox("**Variables permitidas:**",
                                options=self.var_categoric)
 
             if len(var) < 1:
@@ -193,7 +224,7 @@ class dashboard():
             else:
                 st.pyplot(self.barras(var).get_figure(),
                           use_container_width=True)
-                with st.expander("Descripcion de variables", expanded=False):
+                with st.expander("Descripción de variables", expanded=False):
                     st.write(self.desc_var(var))
 
         elif "BOXPLOT" in tpg:
@@ -201,14 +232,14 @@ class dashboard():
             # También proporciona una descripción de ambas variables seleccionadas.
             col1, col2 = st.columns(2)
             varc = col1.selectbox(
-                "Variable categorica", options=self.var_categoric)
-            varn = col2.selectbox("Variable numerica", options=[
+                "**Variable categórica:**", options=self.var_categoric)
+            varn = col2.selectbox("**Variable numerica:**", options=[
                 ""]+self.var_numeric)
 
             if varc and varn:
                 st.pyplot(self.boxplot(varc, varn),
                           use_container_width=True)
-            with st.expander("Descripcion de variables", expanded=False):
+            with st.expander("Descripción de variables", expanded=False):
                 st.write(self.desc_var(varc))
                 st.write(self.desc_var(varn))
 
@@ -217,13 +248,13 @@ class dashboard():
             # También proporciona una descripción de ambas variables seleccionadas.
             col1, col2 = st.columns(2)
             var1 = col1.selectbox(
-                "Primera Variable", options=[""]+self.var_numeric)
-            var2 = col2.selectbox("Segunda Variable", options=[
+                "**Primera Variable:**", options=[""]+self.var_numeric)
+            var2 = col2.selectbox("**Segunda Variable:**", options=[
                 ""]+self.var_numeric)
             if var1 and var2:
                 st.pyplot(self.scatter(var1, var2).get_figure(),
                           use_container_width=True)
-                with st.expander("Descripcion de variables", expanded=False):
+                with st.expander("Descripción de variables", expanded=False):
                     st.write(self.desc_var(var1))
                     st.write(self.desc_var(var2))
 
@@ -324,8 +355,8 @@ class dashboard():
         st.title("Filtros Interactivos")
         st.write(
             "Utiliza los filtros interactivos para personalizar tu análisis de datos.")
-        BT = st.multiselect("Filtros", self.vars)
-        with st.expander(label="Filtros", expanded=False):
+        BT = st.multiselect("**Filtros**", self.vars)
+        with st.expander(label="**Filtros aplicados**", expanded=False):
             if "COD_PLAN" in BT:
                 self.PLAN = pd.read_csv("data/COD_PLAN.csv")
                 self.CreateMultiSelect(label="COD_PLAN",
@@ -518,7 +549,8 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.CNACIONALIDAD)
         if BT:
-            st.write(f"Se han encontrado {len(self.modr)}  elementos para los filtros aplicados 13")
+            st.write(f"El **{round(len(self.modr)/len(self.df)*100, 2)}\%** de los datos corresponden a los filtros seleccionados, es decir, se han encontrado **{
+                     len(self.modr)}**  elementos de **{len(self.df)}** datos")
         self.RenameColumns(
             columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
 
@@ -567,7 +599,7 @@ class dashboard():
                               format=format,
                               value=values,
                               step=args["step"])
-            if range[0] == 0:
+            if range[0] == min_value and range[1] == max_value:
                 self.modr = self.modr
             else:
                 self.modr = self.modr[(self.modr[column] <=
@@ -699,7 +731,7 @@ class dashboard():
 
         st.subheader("Hector Daniel Vasquez Rivera")
         st.write("**Rol**: Programador, Tester, Analista y Lider")
-        st.write("**Responsabilidades**:  Diseñar la interfaz de usuario, del dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
+        st.write("**Responsabilidades**:  Diseñar la interfaz de usuario en el dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
         st.write(
             "**Contacto** :email:: [hevasquezr@unal.edu.co](mailto:hevasquezr@unal.edu.co)")
@@ -726,7 +758,7 @@ class dashboard():
             
             """
         elif var == "COD_PLAN":
-            des = """
+            des = """   
             ### Descripción de la variable COD_PLAN
             La variable COD_PLAN representa el código asociado al plan de estudios al que está inscrito el estudiante. Este código identifica de manera única cada plan de estudios ofrecido por la institución educativa.
 
