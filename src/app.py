@@ -549,8 +549,7 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.CNACIONALIDAD)
         if BT:
-            st.write(f"El **{round(len(self.modr)/len(self.df)*100, 2)}\%** de los datos corresponden a los filtros seleccionados, es decir, se han encontrado **{
-                     len(self.modr)}**  elementos de **{len(self.df)}** datos")
+            st.write(f"El **{round(len(self.modr)/len(self.df)*100, 2)}\%** de los datos corresponden a los filtros seleccionados, es decir, se han encontrado **{len(self.modr)}**  elementos de **{len(self.df)}** datos")
         self.RenameColumns(
             columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
 
