@@ -74,7 +74,7 @@ class dashboard():
         return df
 
     def describe(self):
-        df = pd.read_csv('data\Estudiantes_dirty.csv')
+        df = pd.read_csv('data/Estudiantes_dirty.csv')
 
         df = df.drop(["SEDE", "COD_FACULTAD", "FACULTAD", "CONVENIO_PLAN",
                       "COD_NIVEL", "NIVEL"], axis=1)
