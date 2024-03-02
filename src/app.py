@@ -88,7 +88,6 @@ class dashboard():
 
         categorical = []
         numerical = []
-        print(df.loc[46, :])
         for x in df.loc[46, :]:
             if isinstance(x, str):
                 categorical.append(x)
@@ -114,7 +113,7 @@ class dashboard():
         if action == "Estadística Descriptiva":
             self.est_desc()
         elif action == "Visualización de Variables":
-            self.GragpsVar()
+            self.Visualization()
 
     def est_desc(self):
         # La función est_desc() permite al usuario realizar estadísticas descriptivas sobre las variables del conjunto de datos.
@@ -193,13 +192,18 @@ class dashboard():
             else:
                 return est_cat, False
 
-    def GragpsVar(self):
-        # La función GragpsVar() permite al usuario seleccionar el tipo de gráfico que desea generar y las variables que
+    def Select_Graficas(self,
+                        df: pd.DataFrame):
+        # La función Select_Graficas() permite al usuario seleccionar el tipo de gráfico que desea generar y las variables que
         # desea utilizar en la visualización. Dependiendo del tipo de gráfico seleccionado, se muestran opciones específicas
         # para seleccionar las variables y se generan los gráficos correspondientes. Aquí está un resumen de lo que hace cada
         # sección del código:
-        tpg = st.selectbox("**Tipo de grafico:**", options=["",
-                                                            "HISTOGRAMA", "BARRAS", "BOXPLOT", "PUNTOS"])
+        tpg = st.selectbox("**Tipo de grafico:**",
+                           options=["",
+                                    "HISTOGRAMA",
+                                    "BARRAS",
+                                    "BOXPLOT",
+                                    "PUNTOS"])
 
         if "HISTOGRAMA" in tpg:
             # Permite al usuario seleccionar una variable numérica y genera un histograma correspondiente.
@@ -207,7 +211,7 @@ class dashboard():
             var = st.selectbox("**Variables permitidas:**",
                                options=[""]+self.var_numeric)
             if len(var) > 1:
-                st.pyplot(self.histogram(var).get_figure(),
+                st.pyplot(self.histogram(var, df).get_figure(),
                           use_container_width=True)
                 with st.expander("**Descripción de variables**", expanded=False):
                     st.write(self.desc_var(var))
@@ -222,7 +226,7 @@ class dashboard():
             if len(var) < 1:
                 pass
             else:
-                st.pyplot(self.barras(var).get_figure(),
+                st.pyplot(self.barras(var, df).get_figure(),
                           use_container_width=True)
                 with st.expander("Descripción de variables", expanded=False):
                     st.write(self.desc_var(var))
@@ -237,7 +241,7 @@ class dashboard():
                 ""]+self.var_numeric)
 
             if varc and varn:
-                st.pyplot(self.boxplot(varc, varn),
+                st.pyplot(self.boxplot(varc, varn, df),
                           use_container_width=True)
             with st.expander("Descripción de variables", expanded=False):
                 st.write(self.desc_var(varc))
@@ -252,32 +256,40 @@ class dashboard():
             var2 = col2.selectbox("**Segunda Variable:**", options=[
                 ""]+self.var_numeric)
             if var1 and var2:
-                st.pyplot(self.scatter(var1, var2).get_figure(),
+                st.pyplot(self.scatter(var1, var2, df).get_figure(),
                           use_container_width=True)
                 with st.expander("Descripción de variables", expanded=False):
                     st.write(self.desc_var(var1))
                     st.write(self.desc_var(var2))
 
-    def histogram(self, data):
+    def Visualization(self):
+        self.Select_Graficas(self.df)
+
+    def histogram(self,
+                  data: str,
+                  df: pd.DataFrame):
         # La función histogram() recibe un nombre de columna de datos y genera un histograma correspondiente utilizando la biblioteca Seaborn.
         # Se crea un DataFrame con la columna de datos seleccionada y se utiliza seaborn para trazar el histograma. Se establecen etiquetas
         # adecuadas para los ejes x e y del histograma. Finalmente, se devuelve el objeto del histograma.
-        dataframe = pd.DataFrame(self.df[data])
+        dataframe = pd.DataFrame(df[data])
         plot = sns.histplot(x=data, data=dataframe, color="#A31D31")
         plot.set_xlabel(data)
         plot.set_ylabel("Recuento")
         plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
-    def boxplot(self, varc, varn):
+    def boxplot(self,
+                varc: str,
+                varn: str,
+                df: pd.DataFrame):
         # La función boxplot() recibe los nombres de una variable categórica y una variable numérica, y genera un diagrama de caja correspondiente
         # utilizando Seaborn. Se extraen los valores de ambas variables del DataFrame principal y se crea el diagrama de caja con Seaborn, especificando
         # la variable categórica en el eje x y la variable numérica en el eje y. Se establecen etiquetas adecuadas para los ejes x e y del diagrama,
         # y se aplican ajustes adicionales al formato de las etiquetas del eje x en función de ciertas variables categóricas específicas. Finalmente,
         # se devuelve el objeto del diagrama de caja.
-        label = self.df[[varc]].iloc[:, 0].tolist()
-        values = self.df[[varn]].iloc[:, 0].tolist()
-        plot = sns.boxplot(x=label, y=values, data=self.df, color="#A31D31")
+        label = df[[varc]].iloc[:, 0].tolist()
+        values = df[[varn]].iloc[:, 0].tolist()
+        plot = sns.boxplot(x=label, y=values, data=df, color="#A31D31")
         plot.set_xlabel(varc)
         plot.set_ylabel(varn)
         if varc == "MUNICIPIO_NACIMIENTO":
@@ -293,14 +305,16 @@ class dashboard():
         plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
-    def barras(self, data):
+    def barras(self,
+               data: str,
+               df: pd.DataFrame):
         # toma el nombre de una variable categórica y produce un gráfico de barras correspondiente utilizando Seaborn.
         # Calcula la frecuencia de cada categoría en la variable seleccionada y ordena las etiquetas si la variable es
         # del tipo 'COD'. Luego, crea el gráfico de barras con Seaborn, estableciendo las etiquetas en el eje x y los
         # valores en el eje y. Ajusta el formato de las etiquetas del eje x según ciertas variables categóricas específicas
         # y añade etiquetas a las barras si corresponde. Finalmente, establece las etiquetas adecuadas para los ejes x e y y
         # devuelve el objeto del gráfico de barras generado.
-        count = self.df[data].value_counts()
+        count = df[data].value_counts()
         if (data == "APERTURA") or (data == "CONVOCATORIA"):
             count = count.sort_index(ascending=True)
         label = count.index.tolist()
@@ -329,16 +343,19 @@ class dashboard():
         plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
-    def scatter(self, var1, var2):
+    def scatter(self,
+                var1: str,
+                var2: str,
+                df: pd.DataFrame):
         # toma los nombres de dos variables numéricas y genera un gráfico de dispersión correspondiente utilizando Seaborn.
         # Extrae los valores de ambas variables del DataFrame principal, y luego crea el gráfico de dispersión con Seaborn,
         # especificando la primera variable en el eje x y la segunda variable en el eje y. Además, utiliza el valor de la
         # segunda variable para codificar el color de los puntos en el gráfico. Se establecen etiquetas adecuadas para los
         # ejes x e y, y finalmente se devuelve el objeto del gráfico de dispersión generado.
 
-        values1 = self.df[[var1]].iloc[:, 0].tolist()
-        values2 = self.df[[var2]].iloc[:, 0].tolist()
-        plot = sns.scatterplot(x=values1, y=values2, data=self.df, hue=values2)
+        values1 = df[[var1]].iloc[:, 0].tolist()
+        values2 = df[[var2]].iloc[:, 0].tolist()
+        plot = sns.scatterplot(x=values1, y=values2, data=df, hue=values2)
         plot.set_xlabel(var1)
         plot.set_ylabel(var2)
         plt.gcf().set_facecolor("#F3F0F0")
@@ -351,6 +368,8 @@ class dashboard():
         # La función también realiza ciertas transformaciones en los datos, como renombrar columnas y ajustar la visualización de ciertas
         # variables. Finalmente, muestra el DataFrame filtrado en una tabla con algunas columnas especiales configuradas para una mejor
         # visualización.
+        ShowAccess = False
+        ShowSUBAccess = False
         self.modr = self.df
         st.title("Filtros Interactivos")
         st.write(
@@ -381,9 +400,6 @@ class dashboard():
                                        ),
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.ACCESO)
-                ShowAccess = st.checkbox(label="Mostrar COD_ACCESO")
-                if ShowAccess:
-                    self.RenameColumns(columns=["COD_ACCESO"])
 
             if "COD_SUBACCESO" in BT:
                 self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
@@ -393,9 +409,6 @@ class dashboard():
                                        ),
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.SUBACCESO)
-                ShowSUBAccess = st.checkbox(label="Mostrar COD_SUBACCESO")
-                if ShowSUBAccess:
-                    self.RenameColumns(columns=["COD_SUBACCESO"])
 
             if "GENERO" in BT:
                 self.CreateMultiSelect(label="GENERO",
@@ -548,11 +561,13 @@ class dashboard():
                                        options=self.CNACIONALIDAD.iloc[:, 1],
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.CNACIONALIDAD)
-        if BT:
-            st.write(f"El **{round(len(self.modr)/len(self.df)*100, 2)}\%** de los datos corresponden a los filtros seleccionados, es decir, se han encontrado **{len(self.modr)}**  elementos de **{len(self.df)}** datos")
-        self.RenameColumns(
-            columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
 
+        if BT:
+            st.write(f"El **{round(len(self.modr)/len(self.df)*100, 2)}\%** de los datos corresponden a los filtros seleccionados, es decir, se han encontrado **{
+                     len(self.modr)}**  elementos de **{len(self.df)}** datos.")
+        viz = self.modr.copy()
+        self.RenameColumns(self.modr,
+                           columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
         st.dataframe(self.modr,
                      column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA",
                                                                                       help="El avance del estudiante en su carrera actual",
@@ -567,7 +582,12 @@ class dashboard():
                      use_container_width=True,
                      hide_index=True)
 
-    def RenameColumns(self, **args):
+        st.write("**Visualización de variables**")
+        self.Select_Graficas(viz)
+
+    def RenameColumns(self,
+                      df: pd.DataFrame,
+                      **args):
         # se encarga de renombrar las columnas del DataFrame según los datos proporcionados en archivos CSV específicos.
         # Recibe como argumento un diccionario donde las claves son los nombres de las columnas que se desean renombrar
         # y los valores son los nombres de los archivos CSV que contienen los datos de renombramiento. Itera sobre cada
@@ -577,7 +597,7 @@ class dashboard():
         for column in args["columns"]:
             rename = pd.read_csv(f"data/{column}.csv")
             vars = rename.columns[1]
-            self.modr[column] = self.modr[column].map(
+            df[column] = df[column].map(
                 rename.set_index(column)[vars])
 
     def CreateSlider(self,
