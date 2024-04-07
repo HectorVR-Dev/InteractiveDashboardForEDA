@@ -27,8 +27,10 @@ class dashboard():
                               'MUNICIPIO_NACIMIENTO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
         self.plt = plt
         st.sidebar.title("Navegación")
+
         self.page = st.sidebar.radio(label="empty_label", options=["Inicio", "EDA and Visualización", "Filtros Interactivos",
                                      "Conclusiones", "Notas de version y recursos adicionales", "Feedback y Contacto"], label_visibility='hidden')
+
         self.vars = self.df.columns.to_list()
         self.vars.insert(0, "")
         st.sidebar.image(img, width=200)
@@ -63,6 +65,7 @@ class dashboard():
          A continuación, puede seleccionar cualquier variable para ver su respectiva descripción:
         """)
 
+
         var = st.selectbox(label="**Variable:**",
                            options=self.vars)
         st.markdown(self.desc_var(var))
@@ -89,6 +92,7 @@ class dashboard():
 
         categorical = []
         numerical = []
+
         for x in df.loc[46, :]:
             if isinstance(x, str):
                 categorical.append(x)
@@ -109,6 +113,7 @@ class dashboard():
                  
             En esta sección, puedes explorar y analizar los datos de manera interactiva.
             """)
+
         action = st.selectbox(label="## **Que deseas hacer:**",
                               options=["",
                                        "Estadística Descriptiva",
@@ -119,6 +124,7 @@ class dashboard():
         elif action == "Visualización de Variables":
             self.Visualization()
 
+
     def est_desc(self):
         # La función est_desc() permite al usuario realizar estadísticas descriptivas sobre las variables del conjunto de datos.
         # Dependiendo del tipo de variable seleccionada (numérica o categórica), se presentan opciones diferentes:
@@ -127,6 +133,7 @@ class dashboard():
         # variables seleccionadas.
         # Si se selecciona una variable categórica, se muestra un selector para elegir una variable categórica.
         # Posteriormente, se llama a la función showdf() para mostrar los datos de la variable categórica seleccionada.
+
         typeVar = st.selectbox(label="**Tipo de Variable:**",
                                options=["",
                                         "Numérica",
@@ -134,12 +141,14 @@ class dashboard():
         if typeVar == "Numérica":
             variable_seleccionada = st.multiselect(label="Selecciona las variables numéricas **(Una o Mas)**.",
                                                    options=self.var_numeric)
+
             if variable_seleccionada != []:
                 estadisticas = self.df[variable_seleccionada].describe()
                 st.dataframe(estadisticas, use_container_width=True)
         elif typeVar == "Categórica":
             variable_seleccionada = st.selectbox(label="**Selecciona las variable categórica:**",
                                                  options=self.var_categoric)
+
             if variable_seleccionada:
                 self.showdf(variable_seleccionada)
 
@@ -198,6 +207,7 @@ class dashboard():
             else:
                 return est_cat, False
 
+
     def Select_Graficas(self,
                         df: pd.DataFrame):
         # La función Select_Graficas() permite al usuario seleccionar el tipo de gráfico que desea generar y las variables que
@@ -211,13 +221,16 @@ class dashboard():
                                     "BOXPLOT",
                                     "PUNTOS"])
 
+
         if "HISTOGRAMA" in tpg:
             # Permite al usuario seleccionar una variable numérica y genera un histograma correspondiente.
             # También proporciona una descripción de la variable seleccionada.
+
             var = st.selectbox(label="**Variables permitidas:**",
                                options=[""]+self.var_numeric)
             if len(var) > 1:
                 st.pyplot(self.histogram(var, df).get_figure(),
+
                           use_container_width=True)
                 with st.expander("**Descripción de variables**", expanded=False):
                     st.write(self.desc_var(var))
@@ -226,13 +239,14 @@ class dashboard():
         elif "BARRAS" in tpg:
             # Permite al usuario seleccionar una variable categórica y genera un gráfico de barras correspondiente.
             # También proporciona una descripción de la variable seleccionada.
-            var = st.selectbox(label="**Variables permitidas:**",
-                               options=self.var_categoric)
+
+            var = st.selectbox(label="**Variables permitidas:**", options=self.var_categoric)
 
             if len(var) < 1:
                 pass
             else:
                 st.pyplot(self.barras(var, df).get_figure(),
+
                           use_container_width=True)
                 with st.expander("Descripción de variables", expanded=False):
                     st.write(self.desc_var(var))
@@ -241,6 +255,7 @@ class dashboard():
             # Permite al usuario seleccionar una variable categórica y una variable numérica, y genera un diagrama de caja correspondiente.
             # También proporciona una descripción de ambas variables seleccionadas.
             col1, col2 = st.columns(2)
+
             varc = col1.selectbox(label="**Variable categórica:**",
                                   options=self.var_categoric)
             varn = col2.selectbox(label="**Variable numerica:**",
@@ -248,6 +263,7 @@ class dashboard():
 
             if varc and varn:
                 st.pyplot(self.boxplot(varc, varn, df),
+
                           use_container_width=True)
             with st.expander("Descripción de variables", expanded=False):
                 st.write(self.desc_var(varc))
@@ -257,16 +273,19 @@ class dashboard():
             # Permite al usuario seleccionar dos variables numéricas y genera un gráfico de dispersión correspondiente.
             # También proporciona una descripción de ambas variables seleccionadas.
             col1, col2 = st.columns(2)
+
             var1 = col1.selectbox(label="**Primera Variable:**",
                                   options=[""]+self.var_numeric)
             var2 = col2.selectbox(label="**Segunda Variable:**",
                                   options=[""]+self.var_numeric)
             if var1 and var2:
                 st.pyplot(self.scatter(var1, var2, df).get_figure(),
+
                           use_container_width=True)
                 with st.expander("Descripción de variables", expanded=False):
                     st.write(self.desc_var(var1))
                     st.write(self.desc_var(var2))
+
 
     def Visualization(self):
         self.Select_Graficas(self.df)
@@ -278,24 +297,29 @@ class dashboard():
         # Se crea un DataFrame con la columna de datos seleccionada y se utiliza seaborn para trazar el histograma. Se establecen etiquetas
         # adecuadas para los ejes x e y del histograma. Finalmente, se devuelve el objeto del histograma.
         dataframe = pd.DataFrame(df[data])
+
         plot = sns.histplot(x=data, data=dataframe, color="#A31D31")
         plot.set_xlabel(data)
         plot.set_ylabel("Recuento")
         plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
+
     def boxplot(self,
                 varc: str,
                 varn: str,
                 df: pd.DataFrame):
+
         # La función boxplot() recibe los nombres de una variable categórica y una variable numérica, y genera un diagrama de caja correspondiente
         # utilizando Seaborn. Se extraen los valores de ambas variables del DataFrame principal y se crea el diagrama de caja con Seaborn, especificando
         # la variable categórica en el eje x y la variable numérica en el eje y. Se establecen etiquetas adecuadas para los ejes x e y del diagrama,
         # y se aplican ajustes adicionales al formato de las etiquetas del eje x en función de ciertas variables categóricas específicas. Finalmente,
         # se devuelve el objeto del diagrama de caja.
+
         label = df[[varc]].iloc[:, 0].tolist()
         values = df[[varn]].iloc[:, 0].tolist()
         plot = sns.boxplot(x=label, y=values, data=df, color="#A31D31")
+
         plot.set_xlabel(varc)
         plot.set_ylabel(varn)
         if varc == "MUNICIPIO_NACIMIENTO":
@@ -311,16 +335,20 @@ class dashboard():
         plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
+
     def barras(self,
                data: str,
                df: pd.DataFrame):
+
         # toma el nombre de una variable categórica y produce un gráfico de barras correspondiente utilizando Seaborn.
         # Calcula la frecuencia de cada categoría en la variable seleccionada y ordena las etiquetas si la variable es
         # del tipo 'COD'. Luego, crea el gráfico de barras con Seaborn, estableciendo las etiquetas en el eje x y los
         # valores en el eje y. Ajusta el formato de las etiquetas del eje x según ciertas variables categóricas específicas
         # y añade etiquetas a las barras si corresponde. Finalmente, establece las etiquetas adecuadas para los ejes x e y y
         # devuelve el objeto del gráfico de barras generado.
+
         count = df[data].value_counts()
+
         if (data == "APERTURA") or (data == "CONVOCATORIA"):
             count = count.sort_index(ascending=True)
         label = count.index.tolist()
@@ -349,19 +377,23 @@ class dashboard():
         plt.gcf().set_facecolor("#F3F0F0")
         return plot
 
+
     def scatter(self,
                 var1: str,
                 var2: str,
                 df: pd.DataFrame):
+
         # toma los nombres de dos variables numéricas y genera un gráfico de dispersión correspondiente utilizando Seaborn.
         # Extrae los valores de ambas variables del DataFrame principal, y luego crea el gráfico de dispersión con Seaborn,
         # especificando la primera variable en el eje x y la segunda variable en el eje y. Además, utiliza el valor de la
         # segunda variable para codificar el color de los puntos en el gráfico. Se establecen etiquetas adecuadas para los
         # ejes x e y, y finalmente se devuelve el objeto del gráfico de dispersión generado.
 
+
         values1 = df[[var1]].iloc[:, 0].tolist()
         values2 = df[[var2]].iloc[:, 0].tolist()
         plot = sns.scatterplot(x=values1, y=values2, data=df, hue=values2)
+
         plot.set_xlabel(var1)
         plot.set_ylabel(var2)
         plt.gcf().set_facecolor("#F3F0F0")
@@ -374,14 +406,14 @@ class dashboard():
         # La función también realiza ciertas transformaciones en los datos, como renombrar columnas y ajustar la visualización de ciertas
         # variables. Finalmente, muestra el DataFrame filtrado en una tabla con algunas columnas especiales configuradas para una mejor
         # visualización.
-        ShowAccess = False
-        ShowSUBAccess = False
         self.modr = self.df
         st.title("Filtros Interactivos")
         st.write(
             "Utiliza los filtros interactivos para personalizar tu análisis de datos.")
+
         BT = st.multiselect(label="**Filtros**",
                             options=self.vars)
+
         with st.expander(label="**Filtros aplicados**", expanded=False):
             if "COD_PLAN" in BT:
                 self.PLAN = pd.read_csv("data/COD_PLAN.csv")
@@ -408,6 +440,7 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.ACCESO)
 
+
             if "COD_SUBACCESO" in BT:
                 self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
                 self.CreateMultiSelect(label="COD_SUBACCESO",
@@ -416,6 +449,8 @@ class dashboard():
                                        ),
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.SUBACCESO)
+
+
 
             if "GENERO" in BT:
                 self.CreateMultiSelect(label="GENERO",
@@ -569,12 +604,14 @@ class dashboard():
                                        fuction=self._CreateMultiSelect_WithDDF,
                                        df=self.CNACIONALIDAD)
 
+
         if BT:
             st.write(f"El **{round(len(self.modr)/len(self.df)*100, 2)}%** de los datos corresponden a los filtros seleccionados, es decir, se han encontrado **{
                      len(self.modr)}**  elementos de **{len(self.df)}** datos.")
         viz = self.modr.copy()
         self.RenameColumns(self.modr,
                            columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
+
         st.dataframe(self.modr,
                      column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA",
                                                                                       help="El avance del estudiante en su carrera actual",
@@ -744,6 +781,7 @@ class dashboard():
         # muestra una sección titulada "Recursos Adicionales", donde se invita a explorar recursos relacionados
         # con el análisis de datos y las tecnologías utilizadas en el proyecto.
 
+
         lst = ['Descripción de variables',
                'Filtros interactivos', 'Graficas de variables']
         s = ''
@@ -756,6 +794,7 @@ class dashboard():
         st.info("Version 1.1 \n - Graficas para filtros interactivos")
 
         st.title("Recursos")
+
 
         st.info(
             '[GitHub](https://github.com/HectorVR-Dev/InteractiveDashboardForEDA.git)', icon="⭐")
