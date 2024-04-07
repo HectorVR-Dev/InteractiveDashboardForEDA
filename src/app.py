@@ -28,7 +28,7 @@ class dashboard():
         self.plt = plt
         st.sidebar.title("Navegación")
         self.page = st.sidebar.radio(label="empty_label", options=["Inicio", "EDA and Visualización", "Filtros Interactivos",
-                                     "Conclusiones", "Recursos Adicionales", "Feedback y Contacto"], label_visibility='hidden')
+                                     "Conclusiones", "Notas de version y recursos adicionales", "Feedback y Contacto"], label_visibility='hidden')
         self.vars = self.df.columns.to_list()
         self.vars.insert(0, "")
         st.sidebar.image(img, width=200)
@@ -36,7 +36,7 @@ class dashboard():
                       'EDA and Visualización': self.show_eda,
                       'Filtros Interactivos': self.show_filters,
                       'Conclusiones': self.show_conclusions,
-                      'Recursos Adicionales': self.show_resources,
+                      'Notas de version y recursos adicionales': self.show_resources,
                       'Feedback y Contacto': self.show_feedback}
 
         self.pages[self.page]()
@@ -743,8 +743,20 @@ class dashboard():
     def show_resources(self):
         # muestra una sección titulada "Recursos Adicionales", donde se invita a explorar recursos relacionados
         # con el análisis de datos y las tecnologías utilizadas en el proyecto.
-        st.title("Recursos Adicionales")
-        st.write("Explora los recursos adicionales relacionados con el análisis de datos y las tecnologías utilizadas en este proyecto.")
+
+        lst = ['Descripción de variables',
+               'Filtros interactivos', 'Graficas de variables']
+        s = ''
+        for i in lst:
+            s += "- " + i + "\n"
+
+        st.title("Notas de versión")
+        st.info("Version 1.0 \n {}".format(s))
+
+        st.info("Version 1.1 \n - Graficas para filtros interactivos")
+
+        st.title("Recursos")
+
         st.info(
             '[GitHub](https://github.com/HectorVR-Dev/InteractiveDashboardForEDA.git)', icon="⭐")
         st.info('[StreamLit](https://streamlit.io/)', icon="ℹ️")
