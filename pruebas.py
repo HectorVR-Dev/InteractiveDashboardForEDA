@@ -3,6 +3,8 @@ import streamlit as st
 from src.utils import GenerateQuerys, convert_oracle_to_df
 
 params = {
-    "FROM": "ESTUDIANTES_DIRTY"
+    "SELECT": "PUNTAJE_ADMISION",
+    "FROM": "ESTUDIANTES_CLEAR",
+    "WHERE": "AVANCE_CARRERA > 50"
 }
-print(convert_oracle_to_df(params).head(2))
+print(convert_oracle_to_df(params))

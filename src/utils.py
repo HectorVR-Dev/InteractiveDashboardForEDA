@@ -37,15 +37,6 @@ def GenerateQuerys(query_singles: dict) -> str:
     return consulta
 
 def convert_oracle_to_df(query: dict) -> pd.DataFrame:
-    
-    table_name = query["FROM"]
-                         
-    parametros = {
-        "SELECT": "COLUMN_NAME",
-        "FROM": "ALL_TAB_COLUMNS",
-        "WHERE": f"TABLE_NAME = '{table_name}'"
-    }
-    sql = GenerateQuerys(parametros)
     oracledb.init_oracle_client(lib_dir=r".streamlit\instantclient_23_4")
     connection = oracledb.connect(
         user=st.secrets.db_credentials.USER,
@@ -54,13 +45,9 @@ def convert_oracle_to_df(query: dict) -> pd.DataFrame:
     )
     cursor = connection.cursor()
 
-    cursor.execute(sql)
-    columnas = cursor.fetchall()
-    columnas = [columna[0] for columna in columnas]
-
-    sql = GenerateQuerys(query)
-    datos = [row for row in cursor.execute(sql)]
-
+    cursor.execute(GenerateQuerys(query))
+    datos = cursor.fetchall()
+    columnas = [columna[0] for columna in cursor.description]
     df = pd.DataFrame(datos, columns=columnas)
     cursor.close()
     connection.close()

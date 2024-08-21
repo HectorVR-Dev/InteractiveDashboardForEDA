@@ -86,11 +86,12 @@ class dashboard():
 
     def describe(self):
         #df = pd.read_csv('data/Estudiantes_dirty.csv')
-        dirty = {
-            "FROM": "ESTUDIANTES_DIRTY"
-        }
-        df = convert_oracle_to_df(dirty)
-        st.write(df)
+        #dirty = {
+            #"FROM": "ESTUDIANTES_DIRTY"
+        #}
+        #df = convert_oracle_to_df(dirty)
+        #st.write(df)
+        df = pd.read_csv('Estudiantes_dirty.csv')
         df = df.drop(["SEDE", "COD_FACULTAD", "FACULTAD", "CONVENIO_PLAN",
                       "COD_NIVEL", "NIVEL"], axis=1)
 
@@ -187,7 +188,11 @@ class dashboard():
         # sobre si se debe ocultar el índice del DataFrame al mostrar los resultados.
 
         if variable_seleccionada in ['COD_MINICIPIO', 'MUNICIPIO_RESIDENCIA']:
-            t = pd.read_csv("data/listMunic.csv")
+            query = {
+                "FROM": "LISTMUNIC"
+            }
+            t = convert_oracle_to_df(query)
+            #t = pd.read_csv("data/listMunic.csv")
             frecuencia = t[variable_seleccionada].value_counts()
             porcentaje = t[variable_seleccionada].value_counts(
                 normalize=True)*100
@@ -208,8 +213,11 @@ class dashboard():
             est_cat = pd.DataFrame(
                 {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
             if variable_seleccionada[:3] == 'COD':
-                t = pd.read_csv(
-                    f'data/{variable_seleccionada}.csv')
+                query = {
+                    "FROM": f"{variable_seleccionada}".upper()
+                }
+                t = convert_oracle_to_df(query)
+                #t = pd.read_csv(f'data/{variable_seleccionada}.csv')
                 est_cat = pd.merge(est_cat, t[[
                     variable_seleccionada, t.columns[1]]], on=variable_seleccionada, how='right')
                 est_cat = est_cat[[est_cat.columns[-1]] +
@@ -427,7 +435,11 @@ class dashboard():
 
         with st.expander(label="**Filtros aplicados**", expanded=False):
             if "COD_PLAN" in BT:
-                self.PLAN = pd.read_csv("data/COD_PLAN.csv")
+                #self.PLAN = pd.read_csv("data/COD_PLAN.csv")
+                query = {
+                    "FROM": "COD_PLAN"
+                }
+                self.PLAN = convert_oracle_to_df(query)
                 self.CreateMultiSelect(label="COD_PLAN",
                                        column="COD_PLAN",
                                        options=self.PLAN.iloc[:, 1].tolist(
@@ -443,7 +455,11 @@ class dashboard():
                                   format="%.1f")
 
             if "COD_ACCESO" in BT:
-                self.ACCESO = pd.read_csv("data/COD_ACCESO.csv")
+                #self.ACCESO = pd.read_csv("data/COD_ACCESO.csv")
+                query = {
+                    "FROM": "COD_ACCESO"
+                }
+                self.PLAN = convert_oracle_to_df(query)
                 self.CreateMultiSelect(label="COD_ACCESO",
                                        column="COD_ACCESO",
                                        options=self.ACCESO.iloc[:, 1].tolist(
@@ -453,7 +469,11 @@ class dashboard():
 
 
             if "COD_SUBACCESO" in BT:
-                self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
+                #self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
+                query = {
+                    "FROM": "COD_SUBACCESO"
+                }
+                self.PLAN = convert_oracle_to_df(query)
                 self.CreateMultiSelect(label="COD_SUBACCESO",
                                        column="COD_SUBACCESO",
                                        options=self.SUBACCESO.iloc[:, 1].tolist(
@@ -578,8 +598,11 @@ class dashboard():
                                   format="%0.1f")
 
             if "COD_DEPTO_RESIDENCIA" in BT:
-                self.CDRESIDENCIA = pd.read_csv(
-                    "data/COD_DEPTO_RESIDENCIA.csv")
+                query = {
+                    "FROM": "COD_DEPTO_RESIDENCIA"
+                }
+                self.PLAN = convert_oracle_to_df(query)
+                #self.CDRESIDENCIA = pd.read_csv("data/COD_DEPTO_RESIDENCIA.csv")
                 self.CreateMultiSelect(label="COD_DEPTO_RESIDENCIA",
                                        column="COD_DEPTO_RESIDENCIA",
                                        options=self.CDRESIDENCIA.iloc[:, 1],
@@ -594,7 +617,11 @@ class dashboard():
                                        fuction=self._CreateMultiselectWithNAN)
 
             if "COD_PROVINCIA" in BT:
-                self.CPROVINCIA = pd.read_csv("data/COD_PROVINCIA.csv")
+                #self.CPROVINCIA = pd.read_csv("data/COD_PROVINCIA.csv")
+                query = {
+                    "FROM": "COD_PROVINCIA"
+                }
+                self.PLAN = convert_oracle_to_df(query)
                 self.CreateMultiSelect(label="COD_PROVINCIA",
                                        column="COD_PROVINCIA",
                                        options=self.CPROVINCIA.iloc[:, 1],
@@ -608,7 +635,11 @@ class dashboard():
                                        fuction=self._CreateMultiselectWithNAN)
 
             if "COD_NACIONALIDAD" in BT:
-                self.CNACIONALIDAD = pd.read_csv("data/COD_NACIONALIDAD.csv")
+                #self.CNACIONALIDAD = pd.read_csv("data/COD_NACIONALIDAD.csv")
+                query = {
+                    "FROM": "COD_NACIONALIDAD"
+                }
+                self.PLAN = convert_oracle_to_df(query)
                 self.CreateMultiSelect(label="COD_NACIONALIDAD",
                                        column="COD_NACIONALIDAD",
                                        options=self.CNACIONALIDAD.iloc[:, 1],
@@ -649,7 +680,11 @@ class dashboard():
         # original a los valores de renombramiento utilizando la columna relevante del archivo CSV como índice. Esto
         # actualiza el DataFrame con las nuevas etiquetas de columna.
         for column in args["columns"]:
-            rename = pd.read_csv(f"data/{column}.csv")
+            query = {
+                "FROM": f"{column}".upper()
+            }
+            rename = convert_oracle_to_df(query)
+            #rename = pd.read_csv(f"data/{column}.csv")
             vars = rename.columns[1]
             df[column] = df[column].map(
                 rename.set_index(column)[vars])
