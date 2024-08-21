@@ -5,6 +5,8 @@ from typing import Union
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import oracledb
+from utils import convert_oracle_to_df
 
 
 class dashboard():
@@ -15,7 +17,12 @@ class dashboard():
         # y categóricas, se crea un menú de navegación en la barra lateral y se asignan las funciones
         # de visualización correspondientes a cada página. Finalmente, se muestra la página inicial de la aplicación.
 
-        self.df = pd.read_csv("data/Estudiantes_clear.csv")
+        #self.df = pd.read_csv("data/Estudiantes_clear.csv")
+        Principal_Dataframe = {
+            "FROM": "ESTUDIANTES_CLEAR"
+        }
+        self.df = convert_oracle_to_df(Principal_Dataframe)
+
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
@@ -78,8 +85,12 @@ class dashboard():
         return df
 
     def describe(self):
-        df = pd.read_csv('data/Estudiantes_dirty.csv')
-
+        #df = pd.read_csv('data/Estudiantes_dirty.csv')
+        dirty = {
+            "FROM": "ESTUDIANTES_DIRTY"
+        }
+        df = convert_oracle_to_df(dirty)
+        st.write(df)
         df = df.drop(["SEDE", "COD_FACULTAD", "FACULTAD", "CONVENIO_PLAN",
                       "COD_NIVEL", "NIVEL"], axis=1)
 
