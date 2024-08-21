@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import oracledb
-from utils import convert_oracle_to_df
+from utils import GenerateQuerys, convert_oracle_to_df
 
 
 class dashboard():
