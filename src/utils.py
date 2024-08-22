@@ -2,6 +2,7 @@ import oracledb
 import pandas as pd
 import streamlit as st
 
+
 def GenerateQuerys(query_singles: dict) -> str:
     select = query_singles.get("SELECT", "*")
     from_ = query_singles.get("FROM", "")
@@ -29,18 +30,20 @@ def GenerateQuerys(query_singles: dict) -> str:
             raise ValueError("La clave 'JOIN' debe contener 'table' y 'on'.")
         
         consulta += f" {join_type} JOIN {join_table} AS {join_as} ON {from_table}.{join_on} = {join_as}.{join_on}"
-    
+
     if where:
         consulta += f" WHERE {where}"
-    
+
     if between:
         campo = between.get("campo", "")
         valor_inicial = between.get("valor_inicial", "")
         valor_final = between.get("valor_final", "")
-        
+
         if not (campo and valor_inicial and valor_final):
-            raise ValueError("La clave 'BETWEEN' debe contener 'campo', 'valor_inicial' y 'valor_final'.")
-        
+            raise ValueError(
+                "La clave 'BETWEEN' debe contener 'campo', 'valor_inicial' y 'valor_final'."
+            )
+
         if where:
             consulta += f" AND {campo} BETWEEN {valor_inicial} AND {valor_final}"
         else:
@@ -50,6 +53,7 @@ def GenerateQuerys(query_singles: dict) -> str:
         consulta += f" GROUP BY {group_by}"
 
     return consulta
+
 
 def convert_oracle_to_df(query: dict) -> pd.DataFrame:
     oracledb.init_oracle_client(lib_dir=r".streamlit\instantclient_23_4")
@@ -95,4 +99,3 @@ def GenerateFilter(VALUES):
             raise TypeError(f"El valor para la variable '{variable}' debe ser una lista o una tupla")
 
     return " AND ".join(clauses)  # Combina todas las cláusulas con 'AND'
-

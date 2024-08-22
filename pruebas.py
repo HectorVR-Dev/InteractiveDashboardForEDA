@@ -1,21 +1,7 @@
 import oracledb
 import streamlit as st
-from src.utils import GenerateQuerys, convert_oracle_to_df
+from src.utils import convert_oracle_to_df, get_columns, GenerateQuerys
 
-query_singles = {
-    "SELECT": "EC.COD_PLAN, CP.PLAN",
-    "FROM": {
-        "table": "ESTUDIANTES_CLEAR",
-        "as": "EC"
-    },
-    "JOIN": {
-        "table": "COD_PLAN",
-        "as": "CP",
-        "on": "COD_PLAN"
-    },
-    "GROUP BY": "EC.COD_PLAN"
-}
+params = {"SELECT": "*", "FROM": {"table": "ESTUDIANTES_CLEAR"}}
+print(convert_oracle_to_df(params))
 
-query = GenerateQuerys(query_singles)
-print(query)
-print(convert_oracle_to_df(query_singles))

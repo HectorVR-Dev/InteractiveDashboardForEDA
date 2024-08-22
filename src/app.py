@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import oracledb
-from utils import convert_oracle_to_df, GenerateFilter
 
+from utils import GenerateQuerys, convert_oracle_to_df, GenerateFilter, convert_oracle_to_df
 @st.cache_data
 def Pre_Data() -> dict:
     
