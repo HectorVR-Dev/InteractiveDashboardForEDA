@@ -6,9 +6,34 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import oracledb
-from utils import convert_oracle_to_df
+from utils import convert_oracle_to_df, GenerateFilter
 
+@st.cache_data
+def Pre_Data() -> dict:
+    
+    query = {"FROM": {"table": "ESTUDIANTES_CLEAR"}}
+    columnas = list(convert_oracle_to_df(query).columns)
+    precarger_data = {}
 
+    for column in columnas:
+        print(column)
+        if column in ["T_DOCUMENTO","GENERO","CONVOCATORIA","MUNICIPIO_RESIDENCIA","APERTURA","MUNICIPIO_NACIMIENTO","VICTIMAS_DEL_CONFLICTO","CARACTER_COLEGIO","DISCAPACIDAD"]:
+            query = {"SELECT": f"DISTINCT({column})", "FROM": {"table": "ESTUDIANTES_CLEAR"}}
+            options = list(convert_oracle_to_df(query).iloc[:,0])
+            precarger_data[column] = options
+
+        elif column in ["EDAD","NUMERO_MATRICULAS","PAPA","PROME_ACADE","ESTRATO","PBM_CALCULADO","PUNTAJE_ADMISION"]:
+            query = {"SELECT": f"MIN({column}),MAX({column})", "FROM": {"table": "ESTUDIANTES_CLEAR"}}
+            range_value = list(convert_oracle_to_df(query).iloc[0,:])
+            precarger_data[column] = range_value
+        elif column in ["AVANCE_CARRERA"]:
+            pass
+        else:
+            params = {"FROM": {"table": column.upper()}}
+            options = list(convert_oracle_to_df(params).iloc[:,0])
+            precarger_data[column] = options
+
+    return precarger_data
 class dashboard():
     def __init__(self):
         # En esta función, se inicializan los atributos de la clase,
@@ -18,11 +43,13 @@ class dashboard():
         # de visualización correspondientes a cada página. Finalmente, se muestra la página inicial de la aplicación.
 
         #self.df = pd.read_csv("data/Estudiantes_clear.csv")
+        
+        
         Principal_Dataframe = {
-            "FROM": "ESTUDIANTES_CLEAR"
+            "FROM": {"table": "ESTUDIANTES_CLEAR"}
         }
         self.df = convert_oracle_to_df(Principal_Dataframe)
-
+        
         icon = Image.open('src/images/grafico-de-dispersion.png')
         img = Image.open('src/images/UNAL.png')
         st.set_page_config(page_title="Interactive Dashboard",
@@ -32,7 +59,6 @@ class dashboard():
                             'PAPA', 'PROME_ACADE', 'PBM_CALCULADO', 'PUNTAJE_ADMISION']
         self.var_categoric = ['', 'COD_PLAN', 'COD_ACCESO', 'COD_SUBACCESO', 'CONVOCATORIA', 'APERTURA', 'T_DOCUMENTO', 'GENERO', 'ESTRATO', 'COD_DEPTO_RESIDENCIA', 'MUNICIPIO_RESIDENCIA', 'COD_PROVINCIA',
                               'MUNICIPIO_NACIMIENTO', 'COD_NACIONALIDAD', 'VICTIMAS_DEL_CONFLICTO', 'DISCAPACIDAD', 'CARACTER_COLEGIO']
-        self.plt = plt
         st.sidebar.title("Navegación")
 
         self.page = st.sidebar.radio(label="empty_label", options=["Inicio", "EDA and Visualización", "Filtros Interactivos",
@@ -41,6 +67,7 @@ class dashboard():
         self.vars = self.df.columns.to_list()
         self.vars.insert(0, "")
         st.sidebar.image(img, width=200)
+        self.options = Pre_Data()
         self.pages = {'Inicio': self.show_home,
                       'EDA and Visualización': self.show_eda,
                       'Filtros Interactivos': self.show_filters,
@@ -85,13 +112,10 @@ class dashboard():
         return df
 
     def describe(self):
-        #df = pd.read_csv('data/Estudiantes_dirty.csv')
-        #dirty = {
-            #"FROM": "ESTUDIANTES_DIRTY"
-        #}
-        #df = convert_oracle_to_df(dirty)
-        #st.write(df)
-        df = pd.read_csv('Estudiantes_dirty.csv')
+        dirty = {
+            "FROM": {"table":"ESTUDIANTES_DIRTY"}
+        }
+        df = convert_oracle_to_df(dirty)
         df = df.drop(["SEDE", "COD_FACULTAD", "FACULTAD", "CONVENIO_PLAN",
                       "COD_NIVEL", "NIVEL"], axis=1)
 
@@ -189,7 +213,7 @@ class dashboard():
 
         if variable_seleccionada in ['COD_MINICIPIO', 'MUNICIPIO_RESIDENCIA']:
             query = {
-                "FROM": "LISTMUNIC"
+                "FROM": {"table": "LISTMUNIC"}
             }
             t = convert_oracle_to_df(query)
             #t = pd.read_csv("data/listMunic.csv")
@@ -214,7 +238,7 @@ class dashboard():
                 {'Frecuencia': frecuencia, 'Porcentaje': porcentaje})
             if variable_seleccionada[:3] == 'COD':
                 query = {
-                    "FROM": f"{variable_seleccionada}".upper()
+                    "FROM": {"table" : f"{variable_seleccionada}".upper()}
                 }
                 t = convert_oracle_to_df(query)
                 #t = pd.read_csv(f'data/{variable_seleccionada}.csv')
@@ -429,247 +453,168 @@ class dashboard():
         st.title("Filtros Interactivos")
         st.write(
             "Utiliza los filtros interactivos para personalizar tu análisis de datos.")
-
+        VALUES_TOTAL = {}
         BT = st.multiselect(label="**Filtros**",
                             options=self.vars)
-
         with st.expander(label="**Filtros aplicados**", expanded=False):
             if "COD_PLAN" in BT:
-                #self.PLAN = pd.read_csv("data/COD_PLAN.csv")
-                query = {
-                    "FROM": "COD_PLAN"
-                }
-                self.PLAN = convert_oracle_to_df(query)
-                self.CreateMultiSelect(label="COD_PLAN",
-                                       column="COD_PLAN",
-                                       options=self.PLAN.iloc[:, 1].tolist(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithDDF,
-                                       df=self.PLAN)
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                                column_name="COD_PLAN")
 
             if "AVANCE_CARRERA" in BT:
-                self.CreateSlider(column="AVANCE_CARRERA",
+                VALUES_AC = self.CreateSlider(column="AVANCE_CARRERA",
                                   min_value=0.,
                                   max_value=100.,
                                   values=(0., 100.),
                                   format="%.1f")
+                VALUES_TOTAL["AVANCE_CARRERA"] = VALUES_AC
 
             if "COD_ACCESO" in BT:
-                #self.ACCESO = pd.read_csv("data/COD_ACCESO.csv")
-                query = {
-                    "FROM": "COD_ACCESO"
-                }
-                self.PLAN = convert_oracle_to_df(query)
-                self.CreateMultiSelect(label="COD_ACCESO",
-                                       column="COD_ACCESO",
-                                       options=self.ACCESO.iloc[:, 1].tolist(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithDDF,
-                                       df=self.ACCESO)
-
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                                     column_name="COD_ACCESO")
 
             if "COD_SUBACCESO" in BT:
-                #self.SUBACCESO = pd.read_csv("data/COD_SUBACCESO.csv")
-                query = {
-                    "FROM": "COD_SUBACCESO"
-                }
-                self.PLAN = convert_oracle_to_df(query)
-                self.CreateMultiSelect(label="COD_SUBACCESO",
-                                       column="COD_SUBACCESO",
-                                       options=self.SUBACCESO.iloc[:, 1].tolist(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithDDF,
-                                       df=self.SUBACCESO)
-
-
-
-            if "GENERO" in BT:
-                self.CreateMultiSelect(label="GENERO",
-                                       column="GENERO",
-                                       options=self.modr["GENERO"].drop_duplicates(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithoutDDF)
-
-            if "EDAD" in BT:
-                min = self.df["EDAD"].min()
-                max = self.df["EDAD"].max()
-                self.CreateSlider(column="EDAD",
-                                  min_value=min,
-                                  max_value=max,
-                                  values=(min, max),
-                                  format="%d")
-
-            if "PAPA" in BT:
-                min = self.df["PAPA"].min()
-                max = self.df["PAPA"].max()
-                self.CreateSlider(column="PAPA",
-                                  min_value=min,
-                                  max_value=max,
-                                  values=(min, max),
-                                  format="%.1f")
-
-            if "PROME_ACADE" in BT:
-                min = self.df["PROME_ACADE"].min()
-                max = self.df["PROME_ACADE"].max()
-                self.CreateSlider(column="PROME_ACADE",
-                                  min_value=min,
-                                  max_value=max,
-                                  values=(min, max),
-                                  format="%0.1f")
-
-            if "PBM_CALCULADO" in BT:
-                min = self.df["PBM_CALCULADO"].min()
-                max = self.df["PBM_CALCULADO"].max()
-                self.CreateSlider(column="PBM_CALCULADO",
-                                  min_value=min,
-                                  max_value=max,
-                                  values=(min, max),
-                                  format="%d")
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                        column_name="COD_SUBACCESO")
 
             if "CONVOCATORIA" in BT:
-                self.CreateMultiSelect(label="CONVOCATORIA",
-                                       column="CONVOCATORIA",
-                                       options=self.df["CONVOCATORIA"].drop_duplicates(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithoutDDF)
-
-            if "APERTURA" in BT:
-                self.CreateMultiSelect(label="APERTURA",
-                                       column="APERTURA",
-                                       options=self.df["APERTURA"].drop_duplicates(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithoutDDF)
-
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                        column_name="CONVOCATORIA")
+             
             if "T_DOCUMENTO" in BT:
-                self.CreateMultiSelect(label="T_DOCUMENTO",
-                                       column="T_DOCUMENTO",
-                                       options=self.df["T_DOCUMENTO"].drop_duplicates(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithoutDDF)
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                                     column_name="T_DOCUMENTO")
+                
+            if "APERTURA" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                        column_name="APERTURA")
+                
+            if "GENERO" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                        column_name="GENERO")
 
             if "NUMERO_MATRICULAS" in BT:
-                min = int(self.df["NUMERO_MATRICULAS"].min())
-                max = int(self.df["NUMERO_MATRICULAS"].max())
-                self.CreateSlider(column="NUMERO_MATRICULAS",
+                min,max = self.options["NUMERO_MATRICULAS"]
+                VALUES_NM = self.CreateSlider(column="NUMERO_MATRICULAS",
                                   min_value=min,
                                   max_value=max,
                                   values=(min, max),
                                   format="%d",
                                   step=1)
+                VALUES_TOTAL["NUMERO_MATRICULAS"] = VALUES_NM 
+
+            if "EDAD" in BT:
+                min,max = self.options["EDAD"]
+                VALUES_E = self.CreateSlider(column="EDAD",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d")
+                VALUES_TOTAL["EDAD"] = VALUES_E
+
+            if "PAPA" in BT:
+                min,max = self.options["PAPA"]
+                VALUES_P = self.CreateSlider(column="PAPA",
+                    min_value=min,
+                    max_value=max,
+                    values=(min, max),
+                    format="%.1f")
+                VALUES_TOTAL["PAPA"] = VALUES_P
+
+            if "PROME_ACADE" in BT:
+                min,max = self.options["PROME_ACADE"]
+                VALUES_PA = self.CreateSlider(column="PROME_ACADE",
+                                    min_value=min,
+                                    max_value=max,
+                                    values=(min, max),
+                                    format="%0.1f")
+                VALUES_TOTAL["PROME_ACADE"] = VALUES_PA
 
             if "ESTRATO" in BT:
-                min = int(self.df["ESTRATO"].min())
-                max = int(self.df["ESTRATO"].max())
-                self.CreateSlider(column="ESTRATO",
+                min,max = self.options["ESTRATO"]
+                VALUE_ES = self.CreateSlider(column="ESTRATO",
                                   min_value=min,
                                   max_value=max,
                                   values=(min, max),
                                   format="%d",
                                   step=1)
+                VALUES_TOTAL["ESTRATO"] = VALUE_ES
+
+            if "PBM_CALCULADO" in BT:
+                min,max = self.options["PBM_CALCULADO"]
+                VALUES_PBM = self.CreateSlider(column="PBM_CALCULADO",
+                                  min_value=min,
+                                  max_value=max,
+                                  values=(min, max),
+                                  format="%d")
+                VALUES_TOTAL["PBM_CALCULADO"] = VALUES_PBM
+            
+            if "COD_DEPTO_RESIDENCIA" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="COD_DEPTO_RESIDENCIA")
+                
+            if "MUNICIPIO_RESIDENCIA" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="MUNICIPIO_RESIDENCIA")
+                
+            if "COD_PROVINCIA" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="COD_PROVINCIA")
+                
+            if "MUNICIPIO_NACIMIENTO" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="MUNICIPIO_NACIMIENTO")
+                
+            if "COD_NACIONALIDAD" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="COD_NACIONALIDAD")
 
             if "VICTIMAS_DEL_CONFLICTO" in BT:
-                self.CreateMultiSelect(label="VICTIMAS_DEL_CONFLICTO",
-                                       column="VICTIMAS_DEL_CONFLICTO",
-                                       options=["SI", "NO"],
-                                       fuction=self._CreateMultiSelectModified,
-                                       binary=True)
-
-            if "DISCAPACIDAD" in BT:
-                self.CreateMultiSelect(label="DISCAPACIDAD",
-                                       column="DISCAPACIDAD",
-                                       options=self.df["DISCAPACIDAD"].drop_duplicates(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithoutDDF)
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="VICTIMAS_DEL_CONFLICTO")
 
             if "CARACTER_COLEGIO" in BT:
-                self.CreateMultiSelect(label="CARACTER_COLEGIO",
-                                       column="CARACTER_COLEGIO",
-                                       options=self.df["CARACTER_COLEGIO"].drop_duplicates(
-                                       ),
-                                       fuction=self._CreateMultiSelect_WithoutDDF)
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="CARACTER_COLEGIO")
+                
+            if "DISCAPACIDAD" in BT:
+                VALUES_TOTAL = self.Filter_Data(VALUES_TOTAL=VALUES_TOTAL,
+                                        column_name="DISCAPACIDAD")
 
             if "PUNTAJE_ADMISION" in BT:
-                min = self.df["PUNTAJE_ADMISION"].min()
-                max = self.df["PUNTAJE_ADMISION"].max()
-                self.CreateSlider(column="PUNTAJE_ADMISION",
+                min,max = self.options["PUNTAJE_ADMISION"]
+                VALUES_PAD = self.CreateSlider(column="PUNTAJE_ADMISION",
                                   min_value=min,
                                   max_value=max,
                                   values=(min, max),
                                   format="%0.1f")
-
-            if "COD_DEPTO_RESIDENCIA" in BT:
-                query = {
-                    "FROM": "COD_DEPTO_RESIDENCIA"
-                }
-                self.PLAN = convert_oracle_to_df(query)
-                #self.CDRESIDENCIA = pd.read_csv("data/COD_DEPTO_RESIDENCIA.csv")
-                self.CreateMultiSelect(label="COD_DEPTO_RESIDENCIA",
-                                       column="COD_DEPTO_RESIDENCIA",
-                                       options=self.CDRESIDENCIA.iloc[:, 1],
-                                       fuction=self._CreateMultiSelect_WithDDF,
-                                       df=self.CDRESIDENCIA)
-
-            if "MUNICIPIO_RESIDENCIA" in BT:
-                self.CreateMultiSelect(label="MUNICIPIO_RESIDENCIA",
-                                       column="MUNICIPIO_RESIDENCIA",
-                                       options=self.df["MUNICIPIO_RESIDENCIA"].dropna(
-                                       ).drop_duplicates(),
-                                       fuction=self._CreateMultiselectWithNAN)
-
-            if "COD_PROVINCIA" in BT:
-                #self.CPROVINCIA = pd.read_csv("data/COD_PROVINCIA.csv")
-                query = {
-                    "FROM": "COD_PROVINCIA"
-                }
-                self.PLAN = convert_oracle_to_df(query)
-                self.CreateMultiSelect(label="COD_PROVINCIA",
-                                       column="COD_PROVINCIA",
-                                       options=self.CPROVINCIA.iloc[:, 1],
-                                       fuction=self._CreateMultiSelect_WithDDF,
-                                       df=self.CPROVINCIA)
-            if "MUNICIPIO_NACIMIENTO" in BT:
-                self.CreateMultiSelect(label="MUNICIPIO_NACIMIENTO",
-                                       column="MUNICIPIO_NACIMIENTO",
-                                       options=self.df["MUNICIPIO_NACIMIENTO"].dropna(
-                                       ).drop_duplicates(),
-                                       fuction=self._CreateMultiselectWithNAN)
-
-            if "COD_NACIONALIDAD" in BT:
-                #self.CNACIONALIDAD = pd.read_csv("data/COD_NACIONALIDAD.csv")
-                query = {
-                    "FROM": "COD_NACIONALIDAD"
-                }
-                self.PLAN = convert_oracle_to_df(query)
-                self.CreateMultiSelect(label="COD_NACIONALIDAD",
-                                       column="COD_NACIONALIDAD",
-                                       options=self.CNACIONALIDAD.iloc[:, 1],
-                                       fuction=self._CreateMultiSelect_WithDDF,
-                                       df=self.CNACIONALIDAD)
+                VALUES_TOTAL["ESTRATO"] = VALUES_PAD 
 
 
-        if BT:
-            st.write(f"El **{round(len(self.modr)/len(self.df)*100, 2)}%** de los datos corresponden a los filtros seleccionados, es decir, se han encontrado **{len(self.modr)}**  elementos de **{len(self.df)}** datos.")
+        if st.button(label='¡Filtrar!',use_container_width=True):
+            query = {"FROM" : {"table": "ESTUDIANTES_CLEAR"},
+                    "WHERE": GenerateFilter(VALUES_TOTAL)}
+            self.modr = convert_oracle_to_df(query)
+
         viz = self.modr.copy()
-        self.RenameColumns(self.modr,
-                           columns=["COD_PLAN", "COD_DEPTO_RESIDENCIA", "COD_PROVINCIA", "COD_NACIONALIDAD"])
-
+        self.RenameColumns(self.modr,columns=["COD_PLAN", "COD_ACCESO"])
+        
         st.dataframe(self.modr,
-                     column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA",
-                                                                                      help="El avance del estudiante en su carrera actual",
-                                                                                      min_value=0.0,
-                                                                                      max_value=100.0,
-                                                                                      format="%f"),
-                                    "PUNTAJE_ADMISION": st.column_config.ProgressColumn("PUNTAJE_ADMISION",
-                                                                                        help="Puntaje obtenido por el estudiante en la prueba de admision",
-                                                                                        min_value=None,
-                                                                                        max_value=888.484,
-                                                                                        format="%f")},
-                     use_container_width=True,
-                     hide_index=True)
-        if BT and len(self.modr) != 0:
+        column_config={"AVANCE_CARRERA": st.column_config.ProgressColumn("AVANCE_CARRERA",
+                                                                        help="El avance del estudiante en su carrera actual",
+                                                                        min_value=0.0,
+                                                                        max_value=100.0,
+                                                                        format="%f"),
+                    "PUNTAJE_ADMISION": st.column_config.ProgressColumn("PUNTAJE_ADMISION",
+                                                                        help="Puntaje obtenido por el estudiante en la prueba de admision",
+                                                                        min_value=None,
+                                                                        max_value=888.484,
+                                                                        format="%f")},
+        use_container_width=True,
+        hide_index=True)
+        if VALUES_TOTAL:
             st.write("**Visualización de variables**")
             self.Select_Graficas(viz)
-
     def RenameColumns(self,
                       df: pd.DataFrame,
                       **args):
@@ -681,7 +626,7 @@ class dashboard():
         # actualiza el DataFrame con las nuevas etiquetas de columna.
         for column in args["columns"]:
             query = {
-                "FROM": f"{column}".upper()
+                "FROM": {"table": f"{column}".upper()}
             }
             rename = convert_oracle_to_df(query)
             #rename = pd.read_csv(f"data/{column}.csv")
@@ -707,94 +652,30 @@ class dashboard():
                               format=format,
                               value=values,
                               step=args["step"])
-            if range[0] == min_value and range[1] == max_value:
-                self.modr = self.modr
-            else:
-                self.modr = self.modr[(self.modr[column] <=
-                                       range[1]) & (self.modr[column] >= range[0])]
         else:
             range = st.slider(column,
                               min_value=min_value,
                               max_value=max_value,
                               format=format,
                               value=values)
-            self.modr = self.modr[(self.modr[column] <=
-                                   range[1]) & (self.modr[column] >= range[0])]
+         
+        return range
+    
+    def Filter_Data(self,
+                    VALUES_TOTAL:dict,
+                    column_name:str) -> dict:
+            
+            if column_name in ["T_DOCUMENTO","GENERO","CONVOCATORIA","MUNICIPIO_RESIDENCIA","APERTURA","MUNICIPIO_NACIMIENTO","VICTIMAS_DEL_CONFLICTO","CARACTER_COLEGIO","DISCAPACIDAD"]:
+                VALUES_PLAN = st.multiselect(label=column_name,options=self.options[column_name])
+                VALUES_PLAN = [VALUE for VALUE in VALUES_PLAN]
+                VALUES_TOTAL[column_name] = VALUES_PLAN
+                return VALUES_TOTAL
+            else:
 
-    def _CreateMultiSelect_WithDDF(self,
-                                   label: str,
-                                   column: str,
-                                   options: list,
-                                   df: pd.DataFrame):
-        # crea un widget de selección múltiple que muestra las opciones proporcionadas en forma de lista desplegable.
-        # Cuando el usuario selecciona una o más opciones, la función actualiza el DataFrame modr para incluir solo las
-        # filas donde los valores de la columna especificada (column) coinciden con las opciones seleccionadas por el usuario.
-        # Utiliza un DataFrame auxiliar (df) para mapear las selecciones del usuario a los valores correspondientes de la
-        # columna especificada.
-
-        Select = st.multiselect(label=label,
-                                options=options)
-        Select = df[df.iloc[:, 1].isin(Select)].iloc[:, 0].tolist()
-        self.modr = self.modr[self.modr[column].isin(Select)]
-
-    def _CreateMultiSelect_WithoutDDF(self,
-                                      label: str,
-                                      column: str,
-                                      options: list):
-        # crea un widget de selección múltiple sin utilizar un DataFrame adicional. Muestra las opciones proporcionadas
-        # en una lista desplegable y permite al usuario seleccionar una o más opciones. Luego, la función actualiza el
-        # DataFrame modr para incluir solo las filas donde los valores de la columna especificada (column) coinciden con
-        # las opciones seleccionadas por el usuario.
-        Select = st.multiselect(label=label,
-                                options=options)
-        self.modr = self.modr[self.modr[column].isin(Select)]
-
-    def _CreateMultiSelectModified(self,
-                                   label: str,
-                                   column: str,
-                                   options: list,
-                                   **args):
-        # crea un widget de selección múltiple modificado para manejar una variable binaria específica. Permite al usuario seleccionar entre
-        # las opciones proporcionadas, y si se selecciona "SI" pero no "NO", filtra el DataFrame modr para incluir solo las filas donde la
-        # columna especificada (column) tenga el valor "SI". Del mismo modo, si se selecciona "NO" pero no "SI", filtra el DataFrame para
-        # incluir solo las filas donde la columna tenga el valor "NO". Si ambas opciones están seleccionadas o ninguna está seleccionada,
-        # no se realiza ningún filtrado y se mantiene el DataFrame original.
-        Select = st.multiselect(label=label,
-                                options=options)
-        if "SI" in Select and "NO" not in Select:
-            self.modr = self.modr[self.modr[column].isin(["SI"])]
-        elif "NO" in Select and "SI" not in Select:
-            self.modr = self.modr[self.modr[column].isin(["NO"])]
-        else:
-            self.modr = self.modr
-
-    def _CreateMultiselectWithNAN(self,
-                                  label: str,
-                                  column: str,
-                                  options: list):
-        # crea un widget de selección múltiple que permite al usuario seleccionar opciones de una lista proporcionada.
-        # Si no se selecciona ninguna opción, el DataFrame modr no se filtra y permanece sin cambios. Si se seleccionan
-        # opciones, el DataFrame se filtra para incluir solo las filas donde la columna especificada (column) tenga valores
-        # que coincidan con las opciones seleccionadas.
-
-        Select = st.multiselect(label=label,
-                                options=options)
-        if not Select:
-            self.modr = self.modr
-        else:
-            self.modr = self.modr[self.modr[column].isin(Select)]
-
-    def CreateMultiSelect(self,
-                          label: str,
-                          column: str,
-                          options: list,
-                          fuction,
-                          **args):
-        # crea un widget de selección múltiple que permite al usuario seleccionar opciones de una lista proporcionada.
-        if args:
-            fuction(label, column, options, **args)
-        else:
-            fuction(label, column, options)
+                VALUES_PLAN = st.multiselect(label=column_name,options=self.options[column_name])
+                VALUES_PLAN = [VALUE for VALUE in VALUES_PLAN]
+                VALUES_TOTAL[column_name] = VALUES_PLAN
+                return VALUES_TOTAL
 
     def show_conclusions(self):
         # presenta los hallazgos del análisis de datos en forma de una lista numerada con descripciones breves de cada hallazgo.
@@ -827,17 +708,19 @@ class dashboard():
         # con el análisis de datos y las tecnologías utilizadas en el proyecto.
 
 
-        lst = ['Descripción de variables',
+        lst1 = ['Descripción de variables',
                'Filtros interactivos', 'Graficas de variables']
         s = ''
-        for i in lst:
+        for i in lst1:
             s += "- " + i + "\n"
-
         st.title("Notas de versión")
+        st.info("Version 2.0 \n - Conección a base de datos instanceada en Oracle")
+        st.info("Version 1.1 \n - Graficas para filtros interactivos")
         st.info("Version 1.0 \n {}".format(s))
 
-        st.info("Version 1.1 \n - Graficas para filtros interactivos")
+        
 
+        
         st.title("Recursos")
 
 
@@ -855,22 +738,31 @@ class dashboard():
         st.write("**Rol**: Programador, Tester, Analista y Lider")
         st.write("**Responsabilidades**:  Diseñar la interfaz de usuario en el dashboard, para garantizar una experiencia de usuario intuitiva y atractiva. Encargado de realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica y Estadística de la Universidad Nacional de Colombia sede de La Paz")
-        st.write(
-            "**Contacto** :email:: [hevasquezr@unal.edu.co](mailto:hevasquezr@unal.edu.co)")
+        st.write("**Contacto** :email:: [hevasquezr@unal.edu.co](mailto:hevasquezr@unal.edu.co)")
 
         st.subheader("Wilhelm David Buitrago Garcia")
-        st.write("**Rol**: Programador, Analista, Colider")
-        st.write("**Responsabilidades**:  Desarrollar la lógica del sistema de filtros y graficas, gestionar la integración de datos, realizar análisis de datos y generar visualizaciones significativas.")
+        st.write("**Rol**: Programador, Tester, Analista y Colider")
+        st.write("**Responsabilidades**:  Implementar la conexión con Oracle Cloud, desarrollar la lógica del sistema de filtros y graficas, gestionar la integración de datos, realizar análisis de datos y generar visualizaciones significativas.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
-        st.write(
-            "**Contacto**	:email:: [wibuitragog@unal.edu.co](mailto:wibuitragog@unal.edu.co)")
+        st.write("**Contacto**	:email:: [wibuitragog@unal.edu.co](mailto:wibuitragog@unal.edu.co)")
 
+        st.subheader("Over Alexander Mejia Rosado")
+        st.write("**Rol**: Programador y Documentador")
+        st.write("**Responsabilidades**:  Contribuir a la lógica general de programación del proyecto y la conexión con Oracle Cloud. Además, de encargarse de crear documentos sobre el proyecto.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
+        st.write("**Contacto** :email:: [omejiar@unal.edu.co](mailto:omejiar@unal.edu.co)")
+    
+        st.subheader("Ronald Mateo Ceballos Lozano")
+        st.write("**Rol**: Documentador y Consultor")
+        st.write("**Responsabilidades**:  Encargarse de crear documentos sobre el proyecto. Ademas, de asegurarse de las correctas sintaxis para las consultas en la base de datos.")
+        st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
+        st.write("**Contacto** :email:: [rceballosl@unal.edu.co](mailto:rceballosl@unal.edu.co)")
+        
         st.subheader("Sergio Andrés Guzmán Carrascal")
         st.write("**Rol**: Programador y Documentador")
         st.write("**Responsabilidades**:  Contribuir a la lógica general de programación del proyecto. Además, de encargarse de crear documentos sobre el proyecto.")
         st.write("**Afiliación**: Estudiante en Ingeniería Mecatrónica de la Universidad Nacional de Colombia sede de La Paz")
-        st.write(
-            "**Contacto** :email:: [seguzmanc@unal.edu.co](mailto:seguzmanc@unal.edu.co)")
+        st.write("**Contacto** :email:: [seguzmanc@unal.edu.co](mailto:seguzmanc@unal.edu.co)")
 
     def desc_var(self, var):
         # recibe como entrada el nombre de una variable var y devuelve una descripción correspondiente a esa variable.
