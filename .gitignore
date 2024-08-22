@@ -3,5 +3,3 @@ src/pruebas.py
 src/copys.txt
 src/dataframe_summary.py
 datadataprocessing2.py
-.streamlit/secrets.toml
-
