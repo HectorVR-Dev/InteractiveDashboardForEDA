@@ -2,3 +2,5 @@ pandas==2.1.4
 pillow==10.3.0
 matplotlib==3.8.0
 seaborn==0.13.2
+cx-Oracle==8.3.0
+oracledb==2.4.0
